@@ -6,7 +6,6 @@
  */
 #include "popcount.h"
 #include <stdio.h>
-#include <nmmintrin.h>
 #include "print.h"
 
 #ifdef DEBUG
@@ -89,7 +88,7 @@ uint8_t __MASK_0F_[32] __aligned__ = {
 			0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf
 			};
 
-uint32_t ssse3_popcount_m256_core(__m128i reg, uint8_t *map) {
+uint32_t ssse3_popcount_m256_core(__m256i reg, uint8_t *map) {
 
 	uint32_t result;
 
@@ -107,12 +106,22 @@ uint32_t ssse3_popcount_m256_core(__m128i reg, uint8_t *map) {
 
 	__m256i packed_sum_8 = _mm256_add_epi8(lower_sum, upper_sum);
 	__m256i packed_sum_64 = _mm256_sad_epu8(packed_sum_8, zero_vec);
-	__m256i shuffled_packed_sum_64 = _mm256_permute_pd(packed_sum_64, 15);
-	__m256i packed_sum_128 = _mm256_add_ep64(packed_sum_64, shuffled_packed_sum_64);
+
+	uint64_t packed_sum[4];
+
+	_mm256_store_si256((__m256i*)packed_sum, packed_sum_64);
+
+	result = packed_sum[0] + packed_sum[1] + packed_sum[2] + packed_sum[3];
+	return result;
+
+/*
+	__m256i shuffled_packed_sum_64 = _mm256_permute4x64_epi64(packed_sum_64, 15);
+	__m256i packed_sum_128 = _mm256_add_epi64(packed_sum_64, shuffled_packed_sum_64);
 	__m256i shuffled_packed_sum_128 = _mm256_permute4x64_epi64(packed_sum_128, 2);
-	__m256i total_sum = _mm256_add_ep64(packed_sum_128, shuffled_packed_sum_128);
+	__m256i total_sum = _mm256_add_epi64(packed_sum_128, shuffled_packed_sum_128);
 
 	result = _mm256_extract_epi32(total_sum, 0);
+	*/
 }
 
 uint32_t ssse3_popcount_m128_core(__m128i reg, uint8_t *map) {

@@ -15,7 +15,7 @@
 
 uint8_t buffer[16 * MAX_CHUNKS] __aligned__;
 
-#define OPT_COUNT 4
+#define OPT_COUNT 5
 
 char* functions[OPT_COUNT] = { "verify", "popcount", 
 		"builtin_popcount", 
@@ -65,14 +65,14 @@ char verify_m128i(int index, uint32_t (*func)(__m128i), uint8_t *buffer,
 	return failed;
 }
 
-char verify_m256i(int index, uint32_t (*func)(__m128i), uint8_t *buffer,
+char verify_m256i(int index, uint32_t (*func)(__m256i), uint8_t *buffer,
 		int chunks16, unsigned popcount_ref) {
 	char failed;
 	int popcount = 0;
 	__m256i reg;
 	int i;
-	for (i = 0; i < chunks16; i++) {
-		reg = *((__m128i *) (buffer + i * 16));
+	for (i = 0; i < chunks16 / 2; i++) {
+		reg = *((__m256i *) (buffer + i * 32));
 		popcount += (*func)(reg);
 	}
 	VERIFY(index);

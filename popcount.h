@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <nmmintrin.h>
+#include <immintrin.h>
 
 uint32_t popcount_m128i_sse(__m128i reg);
 
@@ -21,6 +22,6 @@ uint32_t popcount_m256i_sse(__m256i reg);
 
 uint32_t builtin_popcount(uint8_t* buffer, int chunks16);
 
-uint32_t popcount1(uint8_t *buffer, int chunks16);
+uint32_t popcount(uint8_t *buffer, int chunks16);
 
 #endif /* POPCOUNT_H_ */
