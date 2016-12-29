@@ -108,10 +108,9 @@ uint32_t ssse3_popcount_m256_core(__m256i reg, uint8_t *map) {
 	__m256i packed_sum_64 = _mm256_sad_epu8(packed_sum_8, zero_vec);
 
 	uint64_t packed_sum[4];
-
 	_mm256_store_si256((__m256i*)packed_sum, packed_sum_64);
-
 	result = packed_sum[0] + packed_sum[1] + packed_sum[2] + packed_sum[3];
+
 	return result;
 
 /*
@@ -140,13 +139,14 @@ uint32_t ssse3_popcount_m128_core(__m128i reg, uint8_t *map) {
 
 	__m128i zero_vec = _mm_setzero_si128();
 
-	__m128i packed_sum = _mm_add_epi8(lower_sum, upper_sum);
-	__m128i partial_sum = _mm_sad_epu8(packed_sum, zero_vec);
-	__m128i shuffled_partial_sum = _mm_castps_si128( _mm_movehl_ps(_mm_castsi128_ps(zero_vec), _mm_castsi128_ps(partial_sum) ) );
-	__m128i total_sum = _mm_add_epi32(partial_sum, shuffled_partial_sum);
+	__m128i packed_sum_8 = _mm_add_epi8(lower_sum, upper_sum);
+	__m128i packed_sum_64 = _mm_sad_epu8(packed_sum_8, zero_vec);
 
-	result = _mm_cvtsi128_si32(total_sum);
+	uint64_t packed_sum[2];
+	_mm_store_si128((_m128i*)packed_sum, packed_sum_64);
+	result = packed_sum[0] + packed_sum[1];
 
+	return result;
 /*	
 	printf("reg: \n");
 	print128_bit(reg);
@@ -202,9 +202,9 @@ uint32_t ssse3_popcount_m128_core(__m128i reg, uint8_t *map) {
 			: "=a" (result)
 			: "x" (reg)
 	);
-	*/
 
 	return result;
+	*/
 }
 
 uint32_t popcount_m128i_sse(__m128i reg) {

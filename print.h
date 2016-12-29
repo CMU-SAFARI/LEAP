@@ -11,9 +11,8 @@
 #include <tmmintrin.h>
 
 void printbytevector(uint8_t *data, int length);
-void printbytevector_twice(uint8_t *data, int length);
 void print128_bit(__m128i var);
-void print128_bit_twice(__m128i var);
+void print256_bit(__m128i var);
 void print128_hex(__m128i var);
 
 #endif /* PRINT_H_ */
