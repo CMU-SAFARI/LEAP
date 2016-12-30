@@ -8,9 +8,7 @@
 #include "print.h"
 #include "bit_convert.h"
 #include <stdio.h>
-#include <xmmintrin.h>
-#include <tmmintrin.h>
-#include <emmintrin.h>
+#include <x86intrin.h>
 
 char MASK_A[32] __aligned__ = { 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
 		'A', 'A', 'A', 'A', 'A', 'A', 'A' };
@@ -175,7 +173,7 @@ uint8_t LOC_MASK_AVX[256] = {
 		0x80, 0x80, 0x80, 0x80, //8
 		0x80, 0x80, 0x80, 0x80, //8
 		0x80, 0x80, 0x80, 0x80, //8
-		0x80, 0x80, 0x80, 0x80  //8
+		0x80, 0x80, 0x80, 0x80, //8
 		0x80, 0x80, 0x80, 0x80, //8
 		0x80, 0x80, 0x80, 0x80, //8
 		0x80, 0x80, 0x80, 0x80  //8
@@ -332,9 +330,9 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 	for (i = 8; i < 256; i += 64) {
 		cast_128_1 = (__m128i *) (str + i);
 		cast_128_2 = (__m128i *) (str + i + 32);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
 		temp = _mm256_shuffle_epi32(temp, 0x4e);
-		_mm_storeu_si256(cast_128_1, cast_128_2, temp);
+		_mm256_storeu2_m128i(cast_128_1, cast_128_2, temp);
 	}
 
 //	printf("After shifting 1: %s\n", str);
@@ -348,10 +346,10 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 //	printf("After shifting 2: %s\n", str);
 
 	for (i = 16; i < 256; i += 64) {
-		cast_128_1 = (__m256i *) (str + i);
-		cast_128_2 = (__m256i *) (str + i + 16);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
-		_mm_storeu_si256(cast_128_2, cast_128_1, temp);
+		cast_128_1 = (__m128i *) (str + i);
+		cast_128_2 = (__m128i *) (str + i + 16);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
+		_mm256_storeu2_m128i(cast_128_2, cast_128_1, temp);
 	}
 
 //	printf("After shifting 3: %s\n", str);
@@ -359,9 +357,9 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 	for (i = 8; i < 256; i += 64) {
 		cast_128_1 = (__m128i *) (str + i);
 		cast_128_2 = (__m128i *) (str + i + 32);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
 		temp = _mm256_shuffle_epi32(temp, 0x4e);
-		_mm_storeu_si256(cast_128_1, cast_128_2, temp);
+		_mm256_storeu2_m128i(cast_128_1, cast_128_2, temp);
 	}
 
 //	printf("After shifting 4: %s\n", str);
@@ -376,15 +374,15 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 //	printf("After shifting 5: %s\n", str);
 
 	for (i = 16; i < 64; i += 32) {
-		cast_128_1 = (__m256i *) (str + i);
-		cast_128_2 = (__m256i *) (str + i + 48);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
-		_mm_storeu_si256(cast_128_2, cast_128_1, temp);
+		cast_128_1 = (__m128i *) (str + i);
+		cast_128_2 = (__m128i *) (str + i + 48);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
+		_mm256_storeu2_m128i(cast_128_2, cast_128_1, temp);
 
-		cast_128_1 = (__m256i *) (str + 128 + i);
-		cast_128_2 = (__m256i *) (str + 128 + i + 48);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
-		_mm_storeu_si256(cast_128_2, cast_128_1, temp);
+		cast_128_1 = (__m128i *) (str + 128 + i);
+		cast_128_2 = (__m128i *) (str + 128 + i + 48);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
+		_mm256_storeu2_m128i(cast_128_2, cast_128_1, temp);
 	}
 
 //	printf("After shifting 6: %s\n", str);
@@ -392,18 +390,19 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 	for (i = 8; i < 256; i += 64) {
 		cast_128_1 = (__m128i *) (str + i);
 		cast_128_2 = (__m128i *) (str + i + 32);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
 		temp = _mm256_shuffle_epi32(temp, 0x4e);
-		_mm_storeu_si256(cast_128_1, cast_128_2, temp);
+		_mm256_storeu2_m128i(cast_128_1, cast_128_2, temp);
 	}
 
 //	printf("After shifting 7: %s\n", str);
 
-for (i = 16; i < 128; i += 32) {
-		cast_128_1 = (__m256i *) (str + i);
-		cast_128_2 = (__m256i *) (str + i + 112);
-		temp = _mm256_loadu_m128i(cast_128_1, cast_128_2);
-		_mm_storeu_si256(cast_128_2, cast_128_1, temp);
+	for (i = 16; i < 128; i += 32) {
+		cast_128_1 = (__m128i *) (str + i);
+		cast_128_2 = (__m128i *) (str + i + 112);
+		temp = _mm256_loadu2_m128i(cast_128_1, cast_128_2);
+		_mm256_storeu2_m128i(cast_128_2, cast_128_1, temp);
+	}
 
 
 //	printf("After shifting 8: %s\n", str);

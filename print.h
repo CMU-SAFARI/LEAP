@@ -8,6 +8,7 @@
 #ifndef PRINT_H_
 #define PRINT_H_
 #include <stdint.h>
+#include <immintrin.h>
 #include <tmmintrin.h>
 
 void printbytevector(uint8_t *data, int length);

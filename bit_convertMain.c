@@ -12,10 +12,9 @@
 
 #define OPT_COUNT 4
 
-char* functions[OPT_COUNT] = { "verify", "serial", "sse3_11", "sse3_1" };
+char* functions[OPT_COUNT] = { "verify", "serial", "sse", "avx" };
 
-#define _MAX_LENGTH_ 320
-#define _MAX_LENGTH_11_ 128
+#define _MAX_LENGTH_ 256
 
 char read_t[_MAX_LENGTH_] __aligned__;
 
@@ -36,35 +35,6 @@ void help(const char* progname) {
 
 	printf(" length-count repeat-count\n");
 	exit(1);
-}
-
-char verify(int index, void (*func)(char*, int, uint8_t*), char *str,
-		int length, uint8_t* bits, uint8_t* bits_ref) {
-	char failed = 0;
-	(*func)(str, length, bits);
-	int i;
-
-	printf("%10s -> ", functions[index]);
-
-	for (i = 0; i <= (length - 1) * 2 / (sizeof(bits[0]) * 8); i++) {
-		if (bits[i] != bits_ref[i])
-			failed = 1;
-
-		int j;
-		for (j = sizeof(bits[0]) * 8 - 1; j >= 0; j--) {
-			if (bits[i] & 1ULL << j)
-				printf("1");
-			else
-				printf("0");
-		}
-	}
-
-	printf("\n");
-
-	if (failed)
-		printf("***FAILED!!!***\n");
-
-	return failed;
 }
 
 char verify(int index, void (*func)(char*, uint8_t*, uint8_t*), char *str,
@@ -265,13 +235,13 @@ int main(int argc, char* argv[]) {
 
 		strcpy(read_t,
 				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
-		failed |= verify(2, &sse3_convert2bit11, read_t, length_count,
-				read_bit_t, ref_bit_t);
+		failed |= verify(3, &sse_convert2bit, read_t, length_count,
+				read_bit0_t, read_bit1_t, ref_bit_t);
 //		printf("After swapping: %s\n", read_t);
-
+//		printf("Before swapping: %s\n", read_t);
 		strcpy(read_t,
 				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
-		failed |= verify(3, &sse3_convert2bit1, read_t, length_count,
+		failed |= verify(3, &avx_convert2bit, read_t, length_count,
 				read_bit0_t, read_bit1_t, ref_bit_t);
 //		printf("After swapping: %s\n", read_t);
 
@@ -287,12 +257,12 @@ int main(int argc, char* argv[]) {
 
 	case 2:
 		while (repeat_count--)
-			sse3_convert2bit11(read_t, length_count, read_bit_t);
+			sse_convert2bit(read_t, read_bit0_t, read_bit1_t);
 		break;
 
 	case 3:
 		while (repeat_count--)
-			sse3_convert2bit1(read_t, read_bit0_t, read_bit1_t);
+			avx_convert2bit(read_t, read_bit0_t, read_bit1_t);
 		break;
 
 	}

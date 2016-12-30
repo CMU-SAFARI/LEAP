@@ -1,4 +1,4 @@
-EXECUTABLE = popcount # countPassFilter bit_convert vector_filter string_cp shift test_SIMD_ED vectorED vectorLV sse.o diffED #ssse3_popcount test_modifier
+EXECUTABLE = popcount bit_convert # countPassFilter vector_filter string_cp shift test_SIMD_ED vectorED vectorLV sse.o diffED #ssse3_popcount test_modifier
 
 CXX = g++
 

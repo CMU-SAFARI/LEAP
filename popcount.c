@@ -143,7 +143,7 @@ uint32_t ssse3_popcount_m128_core(__m128i reg, uint8_t *map) {
 	__m128i packed_sum_64 = _mm_sad_epu8(packed_sum_8, zero_vec);
 
 	uint64_t packed_sum[2];
-	_mm_store_si128((_m128i*)packed_sum, packed_sum_64);
+	_mm_store_si128((__m128i*)packed_sum, packed_sum_64);
 	result = packed_sum[0] + packed_sum[1];
 
 	return result;
