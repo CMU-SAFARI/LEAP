@@ -22,8 +22,8 @@ uint8_t read_bit_t[_MAX_LENGTH_ / 4] __aligned__;
 uint8_t ref_bit_t[_MAX_LENGTH_ / 4] __aligned__;
 uint8_t read_bit0_t[_MAX_LENGTH_ / 8] __aligned__;
 uint8_t read_bit1_t[_MAX_LENGTH_ / 8] __aligned__;
-uint8_t ref_bit0_t[_MAX_LENGTH_11_ / 8] __aligned__;
-uint8_t ref_bit1_t[_MAX_LENGTH_11_ / 8] __aligned__;
+uint8_t ref_bit0_t[_MAX_LENGTH_ / 8] __aligned__;
+uint8_t ref_bit1_t[_MAX_LENGTH_ / 8] __aligned__;
 
 void help(const char* progname) {
 	int i;
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
 
 		strcpy(read_t,
 				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
-		failed |= verify(3, &sse_convert2bit, read_t, length_count,
+		failed |= verify(2, &sse_convert2bit, read_t, length_count,
 				read_bit0_t, read_bit1_t, ref_bit_t);
 //		printf("After swapping: %s\n", read_t);
 //		printf("Before swapping: %s\n", read_t);

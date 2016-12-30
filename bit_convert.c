@@ -10,6 +10,17 @@
 #include <stdio.h>
 #include <x86intrin.h>
 
+// This is here only because gcc lacks some intrinsics!!
+__m256i _mm256_loadu2_m128i(__m128i* hi, __m128i* lo) {
+	return _mm256_inserti128_si256(_mm256_castsi128_si256(*lo), *hi, 1);
+}
+
+void _mm256_storeu2_m128i(__m128i* hi, __m128i* lo, __m256i target) {
+	*hi = _mm256_extracti128_si256(target, 1);
+	*lo = _mm256_extracti128_si256(target, 0);
+}
+// This is here only because gcc lacks some intrinsics!!
+
 char MASK_A[32] __aligned__ = { 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
 		'A', 'A', 'A', 'A', 'A', 'A', 'A' };
 
