@@ -9,11 +9,11 @@
 #define __SHIFT_H_
 
 #ifndef __aligned__
-#define __aligned__ __attribute__((aligned(32)))
+	#define __aligned__ __attribute__((aligned(32)))
 #endif
 
 #include <stdint.h>
-#include <nmmintrin.h>
+#include <x86intrin.h>
 
 // read and ref need to be 16 aligned
 __m128i shift_right_sse(__m128i vec, int shift_num);

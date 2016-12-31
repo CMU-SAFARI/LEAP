@@ -1,18 +1,15 @@
 #include <iostream>
 #include <x86intrin.h>
-#include <emmintrin.h>
-#include <immintrin.h>
 #include <cstring>
 #include <string>
 #include <cstdlib>
-#include "bit_convert.h"
-#include "shift.h"
 #include "print.h"
+#include "shift.h"
+#include "bit_convert.h"
 
 #ifndef _MAX_LENGTH_ 
 #define _MAX_LENGTH_ 256
 #endif
-
 
 using namespace std;
 
@@ -39,8 +36,8 @@ public:
 	SIMD_ED();
 	~SIMD_ED();
 
-	void init(int ED_threshold, ED_modes mode);
-	int count_ID_length_sse(int lane_idx, int start_pos);
+	void init(int ED_threshold, ED_modes mode = ED_LOCAL);
+	int count_ID_length_avx(int lane_idx, int start_pos);
 
 	void convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1);
 
