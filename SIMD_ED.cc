@@ -186,20 +186,27 @@ void SIMD_ED::reset() {
 }
 
 void SIMD_ED::run() {
-	int length = count_ID_length_avx(mid_lane, 0);
+	int length;
 
-#ifdef debug	
-	cout << "length result: " << length << " buffer_length: " << buffer_length << endl;
+	for (int l = 1; l < total_lanes - 1; l++) {
+		if (cur_ED[l] == 0) {
+			length = count_ID_length_avx(l, 0);
+	
+#ifdef debug
+			cout << "length result: " << length << " buffer_length: " << buffer_length << endl;
 #endif
-
-	end[mid_lane][0] = length;
-	cur_ED[mid_lane] = 1;
-
-	if (length == buffer_length) {
-		final_lane_idx = mid_lane;
-		final_ED = 0;
-		ED_pass = true;
-		return;
+	
+			end[l][0] = length + start[l][0];
+	
+			if (end[l][0] == buffer_length) {
+				final_lane_idx = l;
+				final_ED = 0;
+				ED_pass = true;
+				return;
+			}
+			
+			cur_ED[l]++;
+		}
 	}
 	
 	for (int e = 1; e <= ED_t; e++) {
