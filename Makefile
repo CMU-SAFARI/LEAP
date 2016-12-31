@@ -1,4 +1,4 @@
-EXECUTABLE = popcount bit_convert # countPassFilter vector_filter string_cp shift test_SIMD_ED vectorED vectorLV sse.o diffED #ssse3_popcount test_modifier
+EXECUTABLE = popcount bit_convert vectorED vectorLV# countPassFilter vector_filter string_cp shift test_SIMD_ED vectorED vectorLV sse.o diffED #ssse3_popcount test_modifier
 
 CXX = g++
 
@@ -6,8 +6,8 @@ LD = ld
 
 LDFLAGS = -r
 
-CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug
-#CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I .
+#CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug
+CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I .
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 endif
@@ -40,6 +40,9 @@ bit_convert.o: bit_convert.c bit_convert.h
 bit_convert: print.o bit_convert.o bit_convertMain.c
 	$(CXX) $(CFLAGS) $^ -o $@
 
+shift.o: shift.c shift.h
+	$(CXX) $(CFLAGS) -c $< -o $@
+
 vector_filter.o: vector_filter.c vector_filter.h
 	$(CXX) $(CFLAGS) -c $< -o $@
 
@@ -55,9 +58,6 @@ vector_filter: mask.o print.o bit_convert.o popcount.o vector_filter.o vector_fi
 countPassFilter: mask.o print.o bit_convert.o popcount.o vector_filter.o countPassFilter.cc
 	$(CXX) $(CFLAGS) $^ -o $@
 
-shift: mask.o print.o vector_filter.o popcount.o bit_convert.o shiftMain.c
-	$(CXX) $(CFLAGS) $^ -o $@
-
 timeSSE: timeSSE.c
 	$(CXX) $(CFLAGS) $< -o $@
 
@@ -70,7 +70,7 @@ read_modifier.o: read_modifier.c read_modifier.h
 test_modifier: mask.o print.o bit_convert.o popcount.o vector_filter.o read_modifier.o test_modifier.c 
 	$(CXX) $(CFLAGS) $^ -o $@
 
-vectorED: SIMD_ED.o mask.o print.o bit_convert.o popcount.o vector_filter.o vectorED.cc
+vectorED: SIMD_ED.o print.o bit_convert.o vectorED.cc shift.o
 	$(CXX) $(CFLAGS) $^ -o $@
 
 vectorLV: LV.o vectorLV.cc
