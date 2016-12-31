@@ -12,12 +12,16 @@
 
 // This is here only because gcc lacks some intrinsics!!
 __m256i _mm256_loadu2_m128i(__m128i* hi, __m128i* lo) {
-	return _mm256_inserti128_si256(_mm256_castsi128_si256(*lo), *hi, 1);
+	__m128i lo_reg = _mm_loadu_si128(lo);
+	__m128i hi_reg = _mm_loadu_si128(hi);
+	return _mm256_inserti128_si256(_mm256_castsi128_si256(lo_reg), hi_reg, 1);
 }
 
 void _mm256_storeu2_m128i(__m128i* hi, __m128i* lo, __m256i target) {
-	*hi = _mm256_extracti128_si256(target, 1);
-	*lo = _mm256_extracti128_si256(target, 0);
+	__m128i hi_reg = _mm256_extracti128_si256(target, 1);
+	__m128i lo_reg = _mm256_extracti128_si256(target, 0);
+	_mm_storeu_si128(hi, hi_reg);
+	_mm_storeu_si128(lo, lo_reg);
 }
 // This is here only because gcc lacks some intrinsics!!
 
@@ -76,7 +80,7 @@ uint8_t BIT_FF[32] __aligned__ = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	};
 
 uint8_t BASE_SHIFT1[32] __aligned__ = {
@@ -86,7 +90,8 @@ uint8_t BASE_SHIFT1[32] __aligned__ = {
 
 uint8_t BASE_SHIFT2[32] __aligned__ = {
 	0, 1, 8, 9, 4, 5, 12, 13, 2, 3, 10, 11, 6, 7, 14, 15,
-	0, 1, 8, 9, 4, 5, 12, 13, 2, 3, 10, 11, 6, 7, 14, 15 };
+	0, 1, 8, 9, 4, 5, 12, 13, 2, 3, 10, 11, 6, 7, 14, 15
+	};
 
 //Have to consider Intel's endians
 uint8_t LOC_MASK_SSE[128] = { 0x01, 0x01, 0x01, 0x01, //1
@@ -426,7 +431,7 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 	*bit0_reg = _mm256_setzero_si256();
 	*bit1_reg = _mm256_setzero_si256();
 
-	for (i = 0; i < 256; i += 16) {
+	for (i = 0; i < 256; i += 32) {
 		cast_str = (__m256i *) (str + i);
 		temp = _mm256_cmpeq_epi8(*maskC, *cast_str);
 		result0 = _mm256_and_si256(temp, *((__m256i *) BIT_FF)); //C=01

@@ -9,7 +9,7 @@
 #define POPCOUNT_H_
 
 #ifndef __aligned__
-	#define __aligned__ __attribute__((aligned(16)))
+	#define __aligned__ __attribute__((aligned(32)))
 #endif
 
 #include <stdint.h>
