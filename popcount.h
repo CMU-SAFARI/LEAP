@@ -13,12 +13,14 @@
 #endif
 
 #include <stdint.h>
-#include <nmmintrin.h>
-#include <immintrin.h>
+#include <x86intrin.h>
 
 uint32_t popcount_m128i_sse(__m128i reg);
+uint32_t popcount_m256i_avx(__m256i reg);
 
-uint32_t popcount_m256i_sse(__m256i reg);
+// SHD popcount with SRS mask.
+uint32_t popcount_SHD_sse(__m128i reg);
+uint32_t popcount_SHD_avx(__m256i reg);
 
 uint32_t builtin_popcount(uint8_t* buffer, int chunks16);
 

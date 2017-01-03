@@ -43,7 +43,7 @@ bit_convert: print.o bit_convert.o bit_convertMain.c
 shift.o: shift.c shift.h
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-vector_filter.o: vector_filter.c vector_filter.h
+SHD.o: SHD.cc SHD.h
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 mask.o: mask.c mask.h

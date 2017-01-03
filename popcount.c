@@ -211,10 +211,17 @@ uint32_t popcount_m128i_sse(__m128i reg) {
 	return ssse3_popcount_m128_core(reg, POPCOUNT);
 }
 
-uint32_t popcount_m256i_sse(__m256i reg) {
+uint32_t popcount_m256i_avx(__m256i reg) {
 	return ssse3_popcount_m256_core(reg, POPCOUNT);
 }
 
+uint32_t popcount_SHD_sse(__m128i reg) {
+	return ssse3_popcount_m128_core(reg, POPCOUNT_SHD);
+}
+
+uint32_t popcount_SHD_avx(__m256i reg) {
+	return ssse3_popcount_m256_core(reg, POPCOUNT_SHD);
+}
 
 uint32_t builtin_popcount(uint8_t* buffer, int chunks16) {
 	uint32_t result = 0;

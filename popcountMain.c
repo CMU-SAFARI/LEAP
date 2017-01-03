@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
 				popcount_ref);
 		failed |= verify_m128i(3, &popcount_m128i_sse, buffer, chunks_count,
 				popcount_ref);
-		failed |= verify_m256i(4, &popcount_m256i_sse, buffer, chunks_count,
+		failed |= verify_m256i(4, &popcount_m256i_avx, buffer, chunks_count,
 				popcount_ref);
 
 		if (failed)
