@@ -6,8 +6,8 @@ LD = ld
 
 LDFLAGS = -r
 
-#CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug
-CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I .
+CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebugg
+#CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I .
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 endif

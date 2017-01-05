@@ -5,6 +5,7 @@
  *      Author: hxin
  */
 #include "bit_convert.h"
+#include "print.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +47,9 @@ char verify(int index, void (*func)(char*, uint8_t*, uint8_t*), char *str,
 	uint8_t bit;
 
 	printf("%10s -> ", functions[index]);
+
+	if (index == 2 && length >= 128)
+		length = 128;
 
 	for (i = 0; i <= (length - 1) * 2 / (sizeof(bits_ref[0]) * 8); i++) {
 		bit = 0;
@@ -137,7 +141,7 @@ int main(int argc, char* argv[]) {
 	int function;
 	int length_count;
 	int repeat_count;
-	int default_length_count = 100;
+	int default_length_count = 200;
 	int default_repeat_count = 100000;
 
 	double time_beg = 0;
@@ -193,7 +197,7 @@ int main(int argc, char* argv[]) {
 //	}
 
 	strcpy(read_t,
-			"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
+			"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGGACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
 
 	printf("Data: ");
 	for (i = 0; i < length_count; i++)
@@ -207,6 +211,9 @@ int main(int argc, char* argv[]) {
 	char failed = 0;
 
 	time_beg = clock();
+
+	__m256i *read_bit0_YMM;
+	__m256i *read_bit1_YMM;
 
 	switch (function) {
 	case 0:
@@ -231,19 +238,23 @@ int main(int argc, char* argv[]) {
 //			printf("%2x", ref_bit_t[i]);
 //		printf("\n");
 
-//		printf("Before swapping: %s\n", read_t);
-
 		strcpy(read_t,
-				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
+				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGGACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
+		printf("Before swapping: %s\n", read_t);
 		failed |= verify(2, &sse_convert2bit, read_t, length_count,
 				read_bit0_t, read_bit1_t, ref_bit_t);
-//		printf("After swapping: %s\n", read_t);
-//		printf("Before swapping: %s\n", read_t);
+		printf("After swapping: %s\n", read_t);
 		strcpy(read_t,
-				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
+				"ACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGGACGCTAGTAGCCGGAATAACAGGTAGGCCTACATTTTCTATACGGCGCCGGCAACCTTGAGGGGCCGCGCCCCGTTACACTTTATACGTTTCCCTTGCAAGCCTTCGTGTCGGAGCATATGTATATGG");
+		printf("Before swapping: %s\n", read_t);
 		failed |= verify(3, &avx_convert2bit, read_t, length_count,
 				read_bit0_t, read_bit1_t, ref_bit_t);
-//		printf("After swapping: %s\n", read_t);
+
+		read_bit0_YMM = (__m256i*) read_bit0_t;
+		read_bit1_YMM = (__m256i*) read_bit1_t;
+		print256_bit(*read_bit0_YMM);
+		print256_bit(*read_bit1_YMM);
+		printf("After swapping: %s\n", read_t);
 
 		if (failed)
 			return EXIT_FAILURE;

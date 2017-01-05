@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 			__m256i ref0_YMM = _mm256_loadu_si256((__m256i*) ref0[read_idx]);
 			__m256i ref1_YMM = _mm256_loadu_si256((__m256i*) ref1[read_idx]);
 
-#ifdef debug
+#ifdef debugg
 			cout << "read0: ";
 			for (int i = 0; i < _MAX_LENGTH_ / 8; i++) {
 				cout << (int) read0[read_idx][i] << " ";

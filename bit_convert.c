@@ -25,18 +25,33 @@ void _mm256_storeu2_m128i(__m128i* hi, __m128i* lo, __m256i target) {
 }
 // This is here only because gcc lacks some intrinsics!!
 
-char MASK_A[32] __aligned__ = { 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
-		'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+char MASK_A[32] __aligned__ = {
+		'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
+		'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
+		'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
+		'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'
+	};
 
-char MASK_C[32] __aligned__ = { 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C',
-		'C', 'C', 'C', 'C', 'C', 'C', 'C' };
+char MASK_C[32] __aligned__ = {
+		'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C',
+		'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C',
+		'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C',
+		'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C'
+	};
 
-char MASK_G[32] __aligned__ = { 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G',
-		'G', 'G', 'G', 'G', 'G', 'G', 'G' };
+char MASK_G[32] __aligned__ = {
+		'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G',
+		'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G',
+		'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G',
+		'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'
+	};
 
 char MASK_T[32] __aligned__ = {
-	'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
-		'T', 'T', 'T', 'T', 'T', 'T', 'T' };
+		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T'
+	};
 
 void c_convert2bit(char *str, int length, uint8_t *bits) {
 	int i;
