@@ -6,7 +6,9 @@
 #include <string>
 #include <cstdlib>
 
-#define _MAX_LENGTH_ 128
+#ifndef _MAX_LENGTH_
+#define _MAX_LENGTH_ 256
+#endif
 
 using namespace std;
 

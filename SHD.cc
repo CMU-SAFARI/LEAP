@@ -165,6 +165,11 @@ int bit_vec_filter_sse(__m128i read_XMM0, __m128i read_XMM1,
 	else
 		mask = _mm_load_si128( (__m128i *) (MASK_SSE_END + (length *
 										SSE_BYTE_NUM)));
+	//Clear unnecessary bits
+	read_XMM0 = _mm_and_si128(read_XMM0, mask);
+	read_XMM1 = _mm_and_si128(read_XMM1, mask);
+	ref_XMM0 = _mm_and_si128(ref_XMM0, mask);
+	ref_XMM1 = _mm_and_si128(ref_XMM1, mask);
 
 	int total_difference = 0;
 
@@ -235,8 +240,8 @@ int bit_vec_filter_sse(__m128i read_XMM0, __m128i read_XMM1,
 		return 1;
 }
 
-int bit_vec_filter_avx(__m256i read_XMM0, __m256i read_XMM1,
-		__m256i ref_XMM0, __m256i ref_XMM1, int length, int max_error) {
+int bit_vec_filter_avx(__m256i read_YMM0, __m256i read_YMM1,
+		__m256i ref_YMM0, __m256i ref_YMM1, int length, int max_error) {
 	
 	__m256i mask;
 	if (length >= SHD_AVX_LENGTH)
@@ -245,25 +250,33 @@ int bit_vec_filter_avx(__m256i read_XMM0, __m256i read_XMM1,
 		mask = _mm256_load_si256( (__m256i *) (MASK_AVX_END + (length *
 										AVX_BYTE_NUM)));
 
+	//Clear unnecessary bits
+	read_YMM0 = _mm256_and_si256(read_YMM0, mask);
+	read_YMM1 = _mm256_and_si256(read_YMM1, mask);
+	ref_YMM0 = _mm256_and_si256(ref_YMM0, mask);
+	ref_YMM1 = _mm256_and_si256(ref_YMM1, mask);
+
 	int total_difference = 0;
 
 	//Start iteration
 	int j;
 
-	__m256i shift_XMM;
-	__m256i diff_XMM;
-	__m256i temp_diff_XMM;
-	__m256i temp_shift_XMM;
+	__m256i shift_YMM;
+	__m256i diff_YMM;
+	__m256i temp_diff_YMM;
+	__m256i temp_shift_YMM;
 	__m256i temp_mask;
 
-	diff_XMM = _mm256_xor_si256(read_XMM0, ref_XMM0);
-	temp_diff_XMM = _mm256_xor_si256(read_XMM1, ref_XMM1);
-	diff_XMM = _mm256_or_si256(diff_XMM, temp_diff_XMM);
+	diff_YMM = _mm256_xor_si256(read_YMM0, ref_YMM0);
+	temp_diff_YMM = _mm256_xor_si256(read_YMM1, ref_YMM1);
+	diff_YMM = _mm256_or_si256(diff_YMM, temp_diff_YMM);
 
-	flip_false_zero(diff_XMM);
+	flip_false_zero(diff_YMM);
 
-//	printf("diff_XMM: \t");
-//	print128_bit(diff_XMM);
+#ifdef debug
+	printf("diff_YMM: \t");
+	print256_bit(diff_YMM);
+#endif
 
 	for (j = 1; j <= max_error; j++) {
 		temp_mask = _mm256_load_si256( (__m256i *) (MASK_AVX_BEG + (j - 1) *
@@ -271,43 +284,49 @@ int bit_vec_filter_avx(__m256i read_XMM0, __m256i read_XMM1,
 		temp_mask = _mm256_and_si256(temp_mask, mask);
 		
 		//Right shift read
-		shift_XMM = shift_right_avx(read_XMM0, j);
-		temp_diff_XMM = _mm256_xor_si256(shift_XMM, ref_XMM0);
-		shift_XMM = shift_right_avx(read_XMM1, j);
-		temp_shift_XMM = _mm256_xor_si256(shift_XMM, ref_XMM1);
-		temp_diff_XMM = _mm256_or_si256(temp_shift_XMM, temp_diff_XMM);
-		temp_diff_XMM = _mm256_and_si256(temp_diff_XMM, temp_mask);
+		shift_YMM = shift_right_avx(read_YMM0, j);
+		temp_diff_YMM = _mm256_xor_si256(shift_YMM, ref_YMM0);
+		shift_YMM = shift_right_avx(read_YMM1, j);
+		temp_shift_YMM = _mm256_xor_si256(shift_YMM, ref_YMM1);
+		temp_diff_YMM = _mm256_or_si256(temp_shift_YMM, temp_diff_YMM);
+		temp_diff_YMM = _mm256_and_si256(temp_diff_YMM, temp_mask);
 //		printf("Before flip: \t");
-//		print128_bit(temp_diff_XMM);
-		flip_false_zero(temp_diff_XMM);
+//		print128_bit(temp_diff_YMM);
+		flip_false_zero(temp_diff_YMM);
 //		printf("After flip: \t");
-//		print128_bit(temp_diff_XMM);
-		diff_XMM = _mm256_and_si256(diff_XMM, temp_diff_XMM);
+//		print128_bit(temp_diff_YMM);
+		diff_YMM = _mm256_and_si256(diff_YMM, temp_diff_YMM);
 
-//		printf("diff_XMM: \t");
-//		print128_bit(diff_XMM);
+//		printf("diff_YMM: \t");
+//		print128_bit(diff_YMM);
 
 		//Right shift ref
-		shift_XMM = shift_right_avx(ref_XMM0, j);
-		temp_diff_XMM = _mm256_xor_si256(shift_XMM, read_XMM0);
-		shift_XMM = shift_right_avx(ref_XMM1, j);
-		temp_shift_XMM = _mm256_xor_si256(shift_XMM, read_XMM1);
-		temp_diff_XMM = _mm256_or_si256(temp_shift_XMM, temp_diff_XMM);
-		temp_diff_XMM = _mm256_and_si256(temp_diff_XMM, temp_mask);
+		shift_YMM = shift_right_avx(ref_YMM0, j);
+		temp_diff_YMM = _mm256_xor_si256(shift_YMM, read_YMM0);
+		shift_YMM = shift_right_avx(ref_YMM1, j);
+		temp_shift_YMM = _mm256_xor_si256(shift_YMM, read_YMM1);
+		temp_diff_YMM = _mm256_or_si256(temp_shift_YMM, temp_diff_YMM);
+		temp_diff_YMM = _mm256_and_si256(temp_diff_YMM, temp_mask);
 //		printf("Before flip: \t");
-//		print128_bit(temp_diff_XMM);
-		flip_false_zero(temp_diff_XMM);
-//		printf("After flip: \t");
-//		print128_bit(temp_diff_XMM);
-		diff_XMM = _mm256_and_si256(diff_XMM, temp_diff_XMM);
+//		print128_bit(temp_diff_YMM);
+		flip_false_zero(temp_diff_YMM);
+#ifdef debug
+		printf("After flip: \t");
+		print256_bit(temp_diff_YMM);
+#endif
+		diff_YMM = _mm256_and_si256(diff_YMM, temp_diff_YMM);
 		
-//		printf("diff_XMM: \t");
-//		print128_bit(diff_XMM);
+#ifdef debug
+		printf("diff_YMM: \t");
+		print256_bit(diff_YMM);
+#endif
 	}
 
-	total_difference = popcount_SHD_avx(diff_XMM);
+	total_difference = popcount_SHD_avx(diff_YMM);
 
-//	printf("total_difference: %d\n", total_difference);
+#ifdef debug
+	printf("total_difference: %d\n", total_difference);
+#endif
 
 	if (total_difference > (max_error) )
 		return 0;

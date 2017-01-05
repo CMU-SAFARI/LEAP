@@ -104,15 +104,20 @@ void SIMD_ED::init(int ED_threshold, ED_modes mode) {
 }
 
 void SIMD_ED::convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1) {
-	strncpy(A, read, length);
-	avx_convert2bit(A, A_bit0_t, A_bit1_t);
-	strncpy(B, ref, length);
-	avx_convert2bit(B, B_bit0_t, B_bit1_t);
+	if (length > _MAX_LENGTH_)
+		length = _MAX_LENGTH_;
 
-	memcpy(A0, A_bit0_t, _MAX_LENGTH_ / 8);
-	memcpy(A1, A_bit1_t, _MAX_LENGTH_ / 8);
-	memcpy(B0, B_bit0_t, _MAX_LENGTH_ / 8);
-	memcpy(B1, B_bit1_t, _MAX_LENGTH_ / 8);
+	//cout << "length: " << length << " ref: " << ref << endl;;
+
+	strncpy(A, read, length);
+	sse_convert2bit(A, A_bit0_t, A_bit1_t);
+	strncpy(B, ref, length);
+	sse_convert2bit(B, B_bit0_t, B_bit1_t);
+
+	memcpy(A0, A_bit0_t, (length - 1) / 8 + 1);
+	memcpy(A1, A_bit1_t, (length - 1) / 8 + 1);
+	memcpy(B0, B_bit0_t, (length - 1) / 8 + 1);
+	memcpy(B1, B_bit1_t, (length - 1) / 8 + 1);
 }
 
 void SIMD_ED::load_reads(char *read, char *ref, int length) {
@@ -132,10 +137,10 @@ void SIMD_ED::load_reads(char *read, char *ref, int length) {
 
 void SIMD_ED::load_reads(uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1, int length) {
 	buffer_length = length;
-	memcpy(A_bit0_t, A0, length / 8);
-	memcpy(A_bit1_t, A1, length / 8);
-	memcpy(B_bit0_t, B0, length / 8);
-	memcpy(B_bit1_t, B1, length / 8);
+	memcpy(A_bit0_t, A0, (length - 1) / 8 + 1);
+	memcpy(A_bit1_t, A1, (length - 1) / 8 + 1);
+	memcpy(B_bit0_t, B0, (length - 1) / 8 + 1);
+	memcpy(B_bit1_t, B1, (length - 1) / 8 + 1);
 }
 
 void SIMD_ED::calculate_masks() {

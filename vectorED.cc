@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
-	ed_obj.init(error, ED_SEMI_FREE_END);
+	ed_obj.init(error);
 
 	do {
 		//clear past result

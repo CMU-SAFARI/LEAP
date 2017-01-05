@@ -38,7 +38,6 @@ int main(int argc, char* argv[]) {
 	string *ref_strs = new string [BATCH_RUN];
 	bool *valid_buff = new bool [BATCH_RUN];
 
-/*
 	uint8_t **read0 = new uint8_t* [BATCH_RUN];
 	uint8_t **read1 = new uint8_t* [BATCH_RUN];
 	uint8_t **ref0 = new uint8_t* [BATCH_RUN];
@@ -51,6 +50,7 @@ int main(int argc, char* argv[]) {
 		ref0[i] = new uint8_t[_MAX_LENGTH_ / 8];
 		ref1[i] = new uint8_t[_MAX_LENGTH_ / 8];
 	}
+/*
 */
 
 	if (argc != 2) {
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
-	ed_obj.init(error, ED_SEMI_FREE_END);
+	ed_obj.init(error);
 
 	do {
 		//clear past result
@@ -91,10 +91,10 @@ int main(int argc, char* argv[]) {
 			
 			//get read
 			getline(&tempstr, &lineLength, stdin);
-			int length = strlen(tempstr) - 1;
-			//length[read_size] = strlen(tempstr) - 1;
+			int length_t = strlen(tempstr) - 1;
+			length[read_size] = length_t; 
 			//Get rid of the new line character
-			tempstr[length] = '\0';
+			tempstr[length_t] = '\0';
 			
 			if (strcmp(tempstr, "end_of_file\0") == 0) {
 				stop = true;
@@ -104,36 +104,106 @@ int main(int argc, char* argv[]) {
 
 			//get ref
 			getline(&tempstr, &lineLength, stdin);
-			length = strlen(tempstr) - 1;
-			//length[read_size] = strlen(tempstr) - 1;
+			length_t = strlen(tempstr) - 1;
+			//length[read_size] = length_t;
 			//Get rid of the new line character
-			tempstr[length] = '\0';
+			tempstr[length_t] = '\0';
 			ref_strs[read_size].assign(tempstr);
 			valid_buff[read_size] = false;
 
-			//if (length[read_size] > 128)
-				//length[read_size] = 128;
+			if (length[read_size] > 256)
+				length[read_size] = 256;
 
 			//cout << "length: " << length[read_size] << endl;
 
 			ed_obj.convert_reads((char*) read_strs[read_size].c_str(), (char*) ref_strs[read_size].c_str(),
 					 	length[read_size], read0[read_size], read1[read_size], ref0[read_size], ref1[read_size]);
+
 		}
 
 		times(&start_time);
 
 		for (read_idx = 0; read_idx < read_size; read_idx++) {
 			
-			int length = read_strs[read_idx].length();
-			//ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length);
-			ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length[read_idx]);
+			//int length_t = read_strs[read_idx].length();
+			int length_t = length[read_idx];
+			__m256i read0_YMM = _mm256_loadu_si256((__m256i*) read0[read_idx]);
+			__m256i read1_YMM = _mm256_loadu_si256((__m256i*) read1[read_idx]);
+			__m256i ref0_YMM = _mm256_loadu_si256((__m256i*) ref0[read_idx]);
+			__m256i ref1_YMM = _mm256_loadu_si256((__m256i*) ref1[read_idx]);
+
+#ifdef debug
+			cout << "read0: ";
+			for (int i = 0; i < _MAX_LENGTH_ / 8; i++) {
+				cout << (int) read0[read_idx][i] << " ";
+			}
+			cout << endl;
+			print256_bit(read0_YMM);
+
+			cout << "read1: ";
+			for (int i = 0; i < _MAX_LENGTH_ / 8; i++) {
+				cout << (int) read1[read_idx][i] << " ";
+			}
+			cout << endl;
+			print256_bit(read1_YMM);
+
+			cout << "ref0: ";
+			for (int i = 0; i < _MAX_LENGTH_ / 8; i++) {
+				cout << (int) ref0[read_idx][i] << " ";
+			}
+			cout << endl;
+			print256_bit(ref0_YMM);
+
+			cout << "ref1: ";
+			for (int i = 0; i < _MAX_LENGTH_ / 8; i++) {
+				cout << (int) ref1[read_idx][i] << " ";
+			}
+			cout << endl;
+			print256_bit(ref1_YMM);
+#endif
+
+
+			if (bit_vec_filter_avx(read0_YMM, read1_YMM, ref0_YMM, ref1_YMM, length_t, error) ) {
+				//valid_buff[read_idx] = true; }
+				//ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length_t);
+				ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length_t);
+				ed_obj.calculate_masks();
+				ed_obj.reset();
+				ed_obj.run();
+				if (ed_obj.check_pass() ) {
+					//ed_obj.backtrack();
+					//fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+					valid_buff[read_idx] = true;
+				}
+			}
+/*
+*/
+/*
+			ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length_t);
 			ed_obj.calculate_masks();
 			ed_obj.reset();
 			ed_obj.run();
-			if (ed_obj.check_pass() ) {
-				//ed_obj.backtrack();
-				//fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
-				valid_buff[read_idx] = true;
+			if (!ed_obj.check_pass() ) {
+				ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length_t);
+				ed_obj.calculate_masks();
+				ed_obj.reset();
+				ed_obj.run();
+				if (ed_obj.check_pass() ) {
+					fprintf(stdout, "%.*s\n", 128, read_strs[read_idx].c_str() );
+					fprintf(stdout, "%.*s\n", 128, ref_strs[read_idx].c_str() );
+				}
+			}
+
+			else {
+				//ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length_t);
+				ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length_t);
+				ed_obj.calculate_masks();
+				ed_obj.reset();
+				ed_obj.run();
+				if (ed_obj.check_pass() ) {
+					fprintf(stdout, "%.*s\n", 128, read_strs[read_idx].c_str() );
+					fprintf(stdout, "%.*s\n", 128, ref_strs[read_idx].c_str() );
+				}
 			}
 /*
 			else {
@@ -142,7 +212,6 @@ int main(int argc, char* argv[]) {
 				fprintf(stdout, "%.*s\n", 128, ref_strs[read_idx].c_str() );
 				exit(1);
 			}
-*/
 			/*			
 			strncpy(read_t, init_all_NULL, 128);
 			strncpy(ref_t, init_all_NULL, 128);
@@ -194,7 +263,6 @@ int main(int argc, char* argv[]) {
 	delete [] ref_strs;
 	delete [] valid_buff;
 
-/*
 	for (int i = 0 ; i < BATCH_RUN; i++) {
 			delete [] read0[i];
 			delete [] read1[i];
@@ -206,6 +274,7 @@ int main(int argc, char* argv[]) {
 	delete [] ref0;
 	delete [] ref1;
 	delete [] length;
+/*
 */
 
 	return 0;
