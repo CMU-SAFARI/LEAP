@@ -43,6 +43,10 @@ public:
 
 	void load_reads(char *read, char *ref, int length);
 	void load_reads(uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1, int length);
+	void load_reads(__m256i A0, __m256i A1, __m256i B0, __m256i B1, int length);
+	
+	void load_ref(__m256i B0, __m256i B1);
+	void load_read(__m256i A0, __m256i A1, int length);
 	
 	void calculate_masks();
 

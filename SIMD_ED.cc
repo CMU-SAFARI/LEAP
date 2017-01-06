@@ -143,6 +143,25 @@ void SIMD_ED::load_reads(uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1, int
 	memcpy(B_bit1_t, B1, (length - 1) / 8 + 1);
 }
 
+void SIMD_ED::load_reads(__m256i A0, __m256i A1, __m256i B0, __m256i B1, int length) {
+	buffer_length = length;
+	_mm256_store_si256((__m256i*) A_bit0_t, A0);
+	_mm256_store_si256((__m256i*) A_bit1_t, A1);
+	_mm256_store_si256((__m256i*) B_bit0_t, B0);
+	_mm256_store_si256((__m256i*) B_bit1_t, B1);
+}
+
+void SIMD_ED::load_read(__m256i A0, __m256i A1, int length) {
+	buffer_length = length;
+	_mm256_store_si256((__m256i*) A_bit0_t, A0);
+	_mm256_store_si256((__m256i*) A_bit1_t, A1);
+}
+
+void SIMD_ED::load_ref(__m256i B0, __m256i B1) {
+	_mm256_store_si256((__m256i*) B_bit0_t, B0);
+	_mm256_store_si256((__m256i*) B_bit1_t, B1);
+}
+
 void SIMD_ED::calculate_masks() {
 	__m256i *A0 = (__m256i*) A_bit0_t;
 	__m256i *A1 = (__m256i*) A_bit1_t;
