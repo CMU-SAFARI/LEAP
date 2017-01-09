@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "SIMD_ED.h"
+#include "SHD.h"
 
 int SIMD_ED::count_ID_length_avx(int lane_idx, int start_pos) {
 	__m256i shifted_mask = shift_left_avx(hamming_masks[lane_idx], start_pos);
@@ -49,6 +50,7 @@ SIMD_ED::SIMD_ED() {
 	cur_ED = NULL;
 	start = NULL;
 	end = NULL;
+	SHD_enable = false;
 
 	mid_lane = 0;
 	total_lanes = 0;
@@ -71,7 +73,9 @@ SIMD_ED::~SIMD_ED() {
 	}
 }
 
-void SIMD_ED::init(int ED_threshold, ED_modes mode) {
+void SIMD_ED::init(int ED_threshold, ED_modes mode, bool SHD_enable) {
+	this->SHD_enable = SHD_enable;
+
 	if (total_lanes != 0)
 		this->~SIMD_ED();
 
@@ -210,6 +214,11 @@ void SIMD_ED::reset() {
 }
 
 void SIMD_ED::run() {
+	if (SHD_enable && !bit_vec_filter_avx(hamming_masks+1, buffer_length, ED_t) ) {
+		ED_pass = false;
+		return;
+	}
+
 	int length;
 
 	for (int l = 1; l < total_lanes - 1; l++) {

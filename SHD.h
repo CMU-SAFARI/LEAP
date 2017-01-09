@@ -22,6 +22,6 @@ int bit_vec_filter_sse(__m128i read_XMM0, __m128i read_XMM1,
 int bit_vec_filter_avx(__m256i read_YMM0, __m256i read_YMM1,
 		__m256i ref_YMM0, __m256i ref_YMM1, int length, int max_error);
 
-int bit_vec_filter_avx(__m256i *xor_masks, int length, int max_error) {
+int bit_vec_filter_avx(__m256i *xor_masks, int length, int max_error);
 
 #endif /* VECTOR_FILTER_H_ */

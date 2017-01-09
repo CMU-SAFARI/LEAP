@@ -345,11 +345,9 @@ int bit_vec_filter_avx(__m256i *xor_masks, int length, int max_error) {
 
 	int total_difference = 0;
 
-	//Start iteration
-	int j;
-
 	__m256i diff_YMM;
 	__m256i temp_mask;
+	__m256i temp_diff;
 
 	diff_YMM = _mm256_set1_epi8(0xff);
 
@@ -360,11 +358,15 @@ int bit_vec_filter_avx(__m256i *xor_masks, int length, int max_error) {
 
 	for (int j = 0; j <= 2 * max_error; j++) {
 		//Right shift read
-		temp_mask = xor_masks[j];
+		int error = abs(j - max_error);
+		temp_mask = _mm256_load_si256( (__m256i *) (MASK_AVX_BEG + (error - 1) *
+								AVX_BYTE_LENGTH));
+		temp_mask = _mm256_and_si256(temp_mask, mask);
+		temp_diff = _mm256_and_si256(xor_masks[j], temp_mask);
 		flip_false_zero(temp_mask);
 //		printf("After flip: \t");
 //		print128_bit(temp_diff_YMM);
-		diff_YMM = _mm256_and_si256(diff_YMM, temp_diff_YMM);
+		diff_YMM = _mm256_and_si256(diff_YMM, temp_diff);
 
 #ifdef debug
 		printf("diff_YMM: \t");

@@ -2,10 +2,12 @@
 #define __MASK_H__
 
 #include <stdint.h>
+/*
 #include <boost/preprocessor/repetition.hpp>
 #include <boost/preprocessor/iteration.hpp>
 #include <boost/preprocessor/arithmetic.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
+*/
 
 #ifndef __aligned__
 	#define __aligned__ __attribute__((aligned(32)))

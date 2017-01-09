@@ -36,7 +36,7 @@ public:
 	SIMD_ED();
 	~SIMD_ED();
 
-	void init(int ED_threshold, ED_modes mode = ED_LOCAL);
+	void init(int ED_threshold, ED_modes mode = ED_LOCAL, bool SHD_enable = true);
 	int count_ID_length_avx(int lane_idx, int start_pos);
 
 	void convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1);
@@ -60,6 +60,7 @@ private:
 	int ED_t;
 	__m256i *hamming_masks;
 	ED_modes mode;
+	bool SHD_enable;
 	//__m128i shifted_mask;
 
 	// information of each lane
