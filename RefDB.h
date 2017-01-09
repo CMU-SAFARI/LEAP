@@ -74,7 +74,7 @@ private:
 	int chromo_total;
 
 	// variables for generate
-	int length_gen;
+	uint64_t length_gen;
 	uint8_t *bit0_gen;
 	uint8_t *bit1_gen;
 	vector<uint64_t> length_array;

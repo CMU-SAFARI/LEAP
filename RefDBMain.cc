@@ -22,7 +22,7 @@ int main() {
 	__m256i bit0;
 	__m256i bit1;
 
-	db.query(1, 0, 256, bit0, bit1);
+	db.query(1, 13, 256, bit0, bit1);
 
 	print256_bit(bit0);
 	print256_bit(bit1);
@@ -31,7 +31,7 @@ int main() {
 	uint8_t bit0_buffer [32] __aligned__;
 	uint8_t bit1_buffer [32] __aligned__;
 
-	memcpy(str_buffer, chromo2, 256);
+	memcpy(str_buffer, chromo2 + 13, 256);
 	avx_convert2bit(str_buffer, bit0_buffer, bit1_buffer);
 
 	__m256i *bit0_ptr = (__m256i*) bit0_buffer;

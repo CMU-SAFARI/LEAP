@@ -9,8 +9,10 @@
 #include <x86intrin.h>
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 
 #define BLANK_SPACE 1048576
+#define BYTE_LENGTH 8 
 
 RefDB::RefDB() {
 	chromo_array = NULL;
@@ -55,7 +57,7 @@ void RefDB::add_chromo(char *chromo_string, uint64_t length) {
 	uint8_t bit0_buff [AVX_BYTE_LENGTH] __aligned__;
 	uint8_t bit1_buff [AVX_BYTE_LENGTH] __aligned__;
 
-	int byte_length = (length - 1) / 8 + 1;
+	uint64_t byte_length = (length - 1) / 8 + 1;
 
 	if (length_gen < byte_length) {
 		if (bit0_gen != NULL) {
@@ -73,17 +75,17 @@ void RefDB::add_chromo(char *chromo_string, uint64_t length) {
 
 	length_array.push_back(length);
 
-	for (int i = 0; i < byte_length; i += AVX_BIT_LENGTH) {
+	for (int i = 0; i < length; i += AVX_BIT_LENGTH) {
 		int corrected_length;
-		if (i + AVX_BIT_LENGTH > byte_length)
-			corrected_length = byte_length - i;
+		if (i + AVX_BIT_LENGTH > length)
+			corrected_length = length - i;
 		else
 			corrected_length = AVX_BIT_LENGTH;
 
 		memcpy(aligned_buff, chromo_string + i, corrected_length * sizeof(uint8_t));
 		avx_convert2bit(aligned_buff, bit0_buff, bit1_buff);
-		memcpy(bit0_gen + i / AVX_BYTE_LENGTH, bit0_buff, (corrected_length - 1) / 8 + 1);
-		memcpy(bit1_gen + i / AVX_BYTE_LENGTH, bit1_buff, (corrected_length - 1) / 8 + 1);
+		memcpy(bit0_gen + i / 8, bit0_buff, (corrected_length - 1) / 8 + 1);
+		memcpy(bit1_gen + i / 8, bit1_buff, (corrected_length - 1) / 8 + 1);
 	}
 
 	temp_file.write((char*) bit0_gen, byte_length);
@@ -98,37 +100,53 @@ void RefDB::finish_and_store(string db_name) {
 	if (temp_file.is_open())
 		temp_file.close();
 
-	ifstream temp_file_reader("temp.ref_DB", ifstream::in);
+	ifstream temp_file_reader("temp.refDB", ifstream::in);
+	temp_file_reader.seekg(0);
 
 	ofstream write_file;
-	write_file.open((db_name + ".ref_DB").c_str(), ofstream::out);
+	write_file.open((db_name + ".refDB").c_str(), ofstream::out);
 
 	write_file << length_array.size() << endl;
 
 	for (int i = 0; i < length_array.size(); i++) {
-		write_file << length_array[i] << " " << (int) pos_array[i] << endl;
+		write_file << length_array[i] << " " << (int) pos_array[i] + BLANK_SPACE << endl;
 	}
 
-	if (write_file.tellp() > BLANK_SPACE) {
+	if (write_file.tellp() >= BLANK_SPACE) {
 		cerr << "too many meta data" << endl;
 		exit(1);
 	}
 
-	write_file.seekp(BLANK_SPACE + 1);
+	write_file.seekp(BLANK_SPACE);
+
+	vector<uint64_t>::iterator max_length_iter = max_element(length_array.begin(), length_array.end() );
+	uint64_t byte_length = (*max_length_iter - 1) / 8 + 1;
+
+	if (length_gen < byte_length) {
+		delete [] bit0_gen;
+		delete [] bit1_gen;
+		bit0_gen = new uint8_t [byte_length];
+		bit1_gen = new uint8_t [byte_length];
+		length_gen = byte_length;
+	}
 
 	for (int i = 0; i < length_array.size(); i++) {
-		string str_buff;
+		byte_length = (length_array[i] - 1) / 8 + 1;
 		// write bit0
-		temp_file_reader >> str_buff;
-		write_file << str_buff << endl;
+		temp_file_reader.read((char*) bit0_gen, byte_length);
+		write_file.write((char*) bit0_gen, byte_length);
+		temp_file_reader.seekg((int) temp_file_reader.tellg() + 1);
+		write_file << endl;
 		// write bit1
-		temp_file_reader >> str_buff;
-		write_file << str_buff << endl;
+		temp_file_reader.read((char*) bit1_gen, byte_length);
+		write_file.write((char*) bit1_gen, byte_length);
+		temp_file_reader.seekg((int) temp_file_reader.tellg() + 1);
+		write_file << endl;
 	}
 
 	temp_file_reader.close();
 	write_file.close();
-	remove("temp.ref_DB");
+	//remove("temp.refDB");
 }
 
 void RefDB::init_load(string db_name) {
@@ -137,7 +155,7 @@ void RefDB::init_load(string db_name) {
 	if (chromo_array != NULL)
 		delete [] chromo_array;
 
-	db_file.open(db_name + ".ref_DB");
+	db_file.open(db_name + ".refDB");
 
 	db_file >> chromo_total;
 
@@ -190,8 +208,8 @@ bool RefDB::query(int chromo_num, int chromo_pos, int query_length, __m256i& bit
 		return false;
 
 	int byte_pos = chromo_pos / 8;
-	bit0 = _mm256_loadu_si256((__m256i*) (chromo_array[chromo_pos].bit0 + byte_pos) );
-	bit1 = _mm256_loadu_si256((__m256i*) (chromo_array[chromo_pos].bit1 + byte_pos) );
+	bit0 = _mm256_loadu_si256((__m256i*) (chromo_array[chromo_num].bit0 + byte_pos) );
+	bit1 = _mm256_loadu_si256((__m256i*) (chromo_array[chromo_num].bit1 + byte_pos) );
 
 	bit0 = shift_left_avx(bit0, chromo_pos % 8);
 	bit1 = shift_left_avx(bit1, chromo_pos % 8);

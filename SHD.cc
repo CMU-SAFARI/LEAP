@@ -333,3 +333,53 @@ int bit_vec_filter_avx(__m256i read_YMM0, __m256i read_YMM1,
 	else
 		return 1;
 }
+
+int bit_vec_filter_avx(__m256i *xor_masks, int length, int max_error) {
+	
+	__m256i mask;
+	if (length >= AVX_BIT_LENGTH)
+		mask = _mm256_set1_epi8(0xff);
+	else
+		mask = _mm256_load_si256( (__m256i *) (MASK_AVX_END + (length *
+										AVX_BYTE_LENGTH)));
+
+	int total_difference = 0;
+
+	//Start iteration
+	int j;
+
+	__m256i diff_YMM;
+	__m256i temp_mask;
+
+	diff_YMM = _mm256_set1_epi8(0xff);
+
+#ifdef debug
+	printf("diff_YMM: \t");
+	print256_bit(diff_YMM);
+#endif
+
+	for (int j = 0; j <= 2 * max_error; j++) {
+		//Right shift read
+		temp_mask = xor_masks[j];
+		flip_false_zero(temp_mask);
+//		printf("After flip: \t");
+//		print128_bit(temp_diff_YMM);
+		diff_YMM = _mm256_and_si256(diff_YMM, temp_diff_YMM);
+
+#ifdef debug
+		printf("diff_YMM: \t");
+		print256_bit(diff_YMM);
+#endif
+	}
+
+	total_difference = popcount_SHD_avx(diff_YMM);
+
+#ifdef debug
+	printf("total_difference: %d\n", total_difference);
+#endif
+
+	if (total_difference > (max_error) )
+		return 0;
+	else
+		return 1;
+}
