@@ -160,11 +160,11 @@ int bit_vec_filter_sse(__m128i read_XMM0, __m128i read_XMM1,
 		__m128i ref_XMM0, __m128i ref_XMM1, int length, int max_error) {
 	
 	__m128i mask;
-	if (length >= SHD_SSE_LENGTH)
+	if (length >= SSE_BIT_LENGTH)
 		mask = _mm_set1_epi8(0xff);
 	else
 		mask = _mm_load_si128( (__m128i *) (MASK_SSE_END + (length *
-										SSE_BYTE_NUM)));
+										SSE_BYTE_LENGTH)));
 	//Clear unnecessary bits
 	read_XMM0 = _mm_and_si128(read_XMM0, mask);
 	read_XMM1 = _mm_and_si128(read_XMM1, mask);
@@ -193,7 +193,7 @@ int bit_vec_filter_sse(__m128i read_XMM0, __m128i read_XMM1,
 
 	for (j = 1; j <= max_error; j++) {
 		temp_mask = _mm_load_si128( (__m128i *) (MASK_SSE_BEG + (j - 1) *
-								SSE_BYTE_NUM));
+								SSE_BYTE_LENGTH));
 		temp_mask = _mm_and_si128(temp_mask, mask);
 		
 		//Right shift read
@@ -244,11 +244,11 @@ int bit_vec_filter_avx(__m256i read_YMM0, __m256i read_YMM1,
 		__m256i ref_YMM0, __m256i ref_YMM1, int length, int max_error) {
 	
 	__m256i mask;
-	if (length >= SHD_AVX_LENGTH)
+	if (length >= AVX_BIT_LENGTH)
 		mask = _mm256_set1_epi8(0xff);
 	else
 		mask = _mm256_load_si256( (__m256i *) (MASK_AVX_END + (length *
-										AVX_BYTE_NUM)));
+										AVX_BYTE_LENGTH)));
 
 	//Clear unnecessary bits
 	read_YMM0 = _mm256_and_si256(read_YMM0, mask);
@@ -280,7 +280,7 @@ int bit_vec_filter_avx(__m256i read_YMM0, __m256i read_YMM1,
 
 	for (j = 1; j <= max_error; j++) {
 		temp_mask = _mm256_load_si256( (__m256i *) (MASK_AVX_BEG + (j - 1) *
-								AVX_BYTE_NUM));
+								AVX_BYTE_LENGTH));
 		temp_mask = _mm256_and_si256(temp_mask, mask);
 		
 		//Right shift read

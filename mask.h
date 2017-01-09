@@ -11,10 +11,10 @@
 	#define __aligned__ __attribute__((aligned(32)))
 #endif
 
-#define SHD_SSE_LENGTH		128
-#define SSE_BYTE_NUM		16
-#define SHD_AVX_LENGTH		256	
-#define AVX_BYTE_NUM		32
+#define SSE_BIT_LENGTH		128
+#define SSE_BYTE_LENGTH		16
+#define AVX_BIT_LENGTH		256	
+#define AVX_BYTE_LENGTH		32
 #define MAX_ERROR_SSE		8
 #define MAX_ERROR_AVX		16
 
