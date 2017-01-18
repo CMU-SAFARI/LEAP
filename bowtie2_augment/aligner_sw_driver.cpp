@@ -54,6 +54,22 @@
 
 using namespace std;
 
+char nuc_decode(int nuc_code) {
+    switch(nuc_code) {
+        case 0:
+        case 4: 
+            return 'A';
+        case 1: 
+            return 'C';
+        case 2:
+            return 'G';
+        case 3:
+            return 'T';
+    }
+    assert(0); 
+    return 'Z'; 
+}
+
 /**
  * Given end-to-end alignment results stored in the SeedResults structure, set
  * up all of our state for resolving and keeping track of reference offsets for
@@ -971,6 +987,7 @@ int SwDriver::extendSeeds(
 				// Find offset of alignment's upstream base assuming net gaps=0
 				// between beginning of read and beginning of seed hit
 				int64_t refoff = (int64_t)toff - rdoff;
+                cout << "refoff: " << refoff << "\n"; 
 				// Coordinate of the seed hit w/r/t the pasted reference string
 				Coord refcoord(tidx, refoff, fw);
 				if(seenDiags1_.locusPresent(refcoord)) {
@@ -1140,15 +1157,15 @@ int SwDriver::extendSeeds(
 					seenDiags1_.add(refival);
 					// Now fill the dynamic programming matrix and return true iff
 					// there is at least one valid alignment
-					TAlScore bestCell = std::numeric_limits<TAlScore>::min();
+					TAlScore bestCell = std::numeric_limits<TAlScore>::min(); // TODO figure out what this line is ? ?? 
                     cout << "Rd : "; 
                     for (uint64_t i = 0; i < rd.length(); i++) { 
-                        cout << rd.getc(i, 1); 
+                        cout << nuc_decode(rd.getc(i, 1)); 
                     }
                     cout << "\n"; 
                     cout << "Ref(" << rect.refl << "): ";
                     for (uint64_t i = 0; i < rect.refr + 1 - rect.refl; i++) { 
-                        cout << ref.getBase(tidx, rect.refl + i);
+                        cout << nuc_decode(ref.getBase(tidx, rect.refl + i));
                     }
                     cout << "\n"; 
 					found = swa.align(bestCell);
