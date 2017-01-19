@@ -825,16 +825,16 @@ int SwDriver::extendSeeds(
 	size_t rows = rdlen;
 	size_t eltsDone = 0;
 
-	db.init_load("test");
-	db.load_chromo(0);
+	//db.init_load("test");
+	//db.load_chromo(0);
 
-	__m256i bit0;
-	__m256i bit1;
+	//__m256i bit0;
+	//__m256i bit1;
 
-	db.query(0, 0, 256, bit0, bit1);
+	//db.query(0, 0, 256, bit0, bit1);
 
-	print256_bit(bit0);
-	print256_bit(bit1);
+	//print256_bit(bit0);
+	//print256_bit(bit1);
 
 	// cerr << "===" << endl;
 	while(true) {
