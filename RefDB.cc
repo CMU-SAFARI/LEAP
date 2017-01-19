@@ -167,6 +167,10 @@ void RefDB::init_load(string db_name) {
 		db_file >> converter;
 		chromo_array[i].pos = converter;
 	}
+
+	for (int i = 0; i < chromo_total; i++) {
+		load_chromo(i);
+	}
 }
 
 bool RefDB::load_chromo(int chromo_num) {
@@ -215,4 +219,8 @@ bool RefDB::query(int chromo_num, int chromo_pos, int query_length, __m256i& bit
 	bit1 = shift_left_avx(bit1, chromo_pos % 8);
 
 	return true;
+}
+
+int RefDB::get_total_chromo_num(){
+	return chromo_total;
 }
