@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <x86intrin.h>
 
+#ifndef __clang__
 // This is here only because gcc lacks some intrinsics!!
 __m256i _mm256_loadu2_m128i(__m128i* hi, __m128i* lo) {
 	__m128i lo_reg = _mm_loadu_si128(lo);
@@ -24,6 +25,7 @@ void _mm256_storeu2_m128i(__m128i* hi, __m128i* lo, __m256i target) {
 	_mm_storeu_si128(lo, lo_reg);
 }
 // This is here only because gcc lacks some intrinsics!!
+#endif 
 
 char MASK_A[32] __aligned__ = {
 		'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
