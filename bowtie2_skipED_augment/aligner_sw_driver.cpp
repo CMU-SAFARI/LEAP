@@ -47,12 +47,15 @@
 #include "aligner_sw_driver.h"
 #include "pe.h"
 #include "dp_framer.h"
+#include "../RefDB.h" 
+#include "../print.h" 
 // -- BTL remove --
 #include <stdlib.h>
 #include <sys/time.h>
 // -- --
 
 using namespace std;
+extern RefDB db; 
 
 /**
  * Given end-to-end alignment results stored in the SeedResults structure, set
@@ -821,6 +824,18 @@ int SwDriver::extendSeeds(
 	size_t nelt = 0, neltLeft = 0;
 	size_t rows = rdlen;
 	size_t eltsDone = 0;
+
+	db.init_load("test");
+	db.load_chromo(0);
+
+	__m256i bit0;
+	__m256i bit1;
+
+	db.query(0, 0, 256, bit0, bit1);
+
+	print256_bit(bit0);
+	print256_bit(bit1);
+
 	// cerr << "===" << endl;
 	while(true) {
 		if(eeMode) {
