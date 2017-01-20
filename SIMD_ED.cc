@@ -55,6 +55,7 @@ SIMD_ED::SIMD_ED() {
     affine_mode = false;
     I_pos = NULL;
     D_pos = NULL;
+    M_pos = NULL;
 
 	mid_lane = 0;
 	total_lanes = 0;
@@ -68,20 +69,30 @@ SIMD_ED::~SIMD_ED() {
 		for (int i = 0; i < total_lanes; i++) {
 			delete [] start[i];
 			delete [] end[i];
-            delete [] I_pos[i];
-            delete [] D_pos[i];
 		}
 
 		delete [] start;
 		delete [] end;
-        delete [] I_pos;
-        delete [] D_pos;
+
+        if (affine_mode) {
+		    for (int i = 0; i < total_lanes; i++) {
+                delete [] M_pos[i];
+                delete [] I_pos[i];
+                delete [] D_pos[i];
+            }
+            delete [] M_pos;
+            delete [] I_pos;
+            delete [] D_pos;
+        }
 
 		total_lanes = 0;
 	}
 }
 
 void SIMD_ED::init(int ED_threshold, ED_modes mode, bool SHD_enable) {
+    // just to clear the affine mode data.
+    ~SIMD_ED();
+
 	this->SHD_enable = SHD_enable;
 
 	if (total_lanes != 0)
@@ -120,11 +131,12 @@ void SIMD_ED::init(int ED_threshold, ED_modes mode, bool SHD_enable) {
 }
 
 void SIMD_ED::init_affine(int ms_penalty, int gap_open_penalty, int gap_ext_penalty) {
+    // just to clear the normal mode data.
+    ~SIMD_ED();
     affine_mode = true;
     this->ms_penalty = ms_penalty;
     this->gap_open_penalty = gap_open_penalty;
     this->gap_ext_penalty = gap_ext_penalty;
-
 }
 
 void SIMD_ED::convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1) {

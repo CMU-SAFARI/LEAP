@@ -73,6 +73,7 @@ private:
     int ms_penalty;
     int gap_open_penalty;
     int gap_ext_penalty;
+    int **M_pos;
 	int **I_pos;
 	int **D_pos;
 
