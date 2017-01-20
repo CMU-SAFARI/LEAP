@@ -52,6 +52,10 @@ SIMD_ED::SIMD_ED() {
 	end = NULL;
 	SHD_enable = false;
 
+    affine_mode = false;
+    I_pos = NULL;
+    D_pos = NULL;
+
 	mid_lane = 0;
 	total_lanes = 0;
 }
@@ -64,10 +68,14 @@ SIMD_ED::~SIMD_ED() {
 		for (int i = 0; i < total_lanes; i++) {
 			delete [] start[i];
 			delete [] end[i];
+            delete [] I_pos[i];
+            delete [] D_pos[i];
 		}
 
 		delete [] start;
 		delete [] end;
+        delete [] I_pos;
+        delete [] D_pos;
 
 		total_lanes = 0;
 	}
@@ -92,10 +100,14 @@ void SIMD_ED::init(int ED_threshold, ED_modes mode, bool SHD_enable) {
 
 	start = new int* [total_lanes];
 	end = new int* [total_lanes];
+	I_pos = new int* [total_lanes];
+	D_pos = new int* [total_lanes];
 
 	for (int i = 0; i < total_lanes; i++) {
 		start[i] = new int [ED_t + 1]();
 		end[i] = new int [ED_t + 1]();
+		I_pos[i] = new int [ED_t + 1]();
+		D_pos[i] = new int [ED_t + 1]();
 	}
 
 	for (int i = 1; i < total_lanes - 1; i++) {
@@ -105,6 +117,14 @@ void SIMD_ED::init(int ED_threshold, ED_modes mode, bool SHD_enable) {
 		else
 			start[i][0] = ED;
 	}
+}
+
+void SIMD_ED::init_affine(int ms_penalty, int gap_open_penalty, int gap_ext_penalty) {
+    affine_mode = true;
+    this->ms_penalty = ms_penalty;
+    this->gap_open_penalty = gap_open_penalty;
+    this->gap_ext_penalty = gap_ext_penalty;
+
 }
 
 void SIMD_ED::convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1) {

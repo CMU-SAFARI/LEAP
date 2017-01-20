@@ -65,6 +65,7 @@ public:
 	void unload_chromo(int chromo_num);
 
 	// query supports only up to 249 length at max.
+	int get_total_chromo_num();
 	bool query(int chromo_num, int chromo_pos, int query_length, __m256i& bit0, __m256i& bit1);
 
 	uint32_t get_chromo_length();

@@ -11,6 +11,10 @@
 #define _MAX_LENGTH_ 256
 #endif
 
+#ifndef _AFFINE_DEF_POS_ 
+#define _AFFINE_DEF_POS_ 10000000
+#endif
+
 using namespace std;
 
 #ifndef __ED_INFO_H_
@@ -37,6 +41,7 @@ public:
 	~SIMD_ED();
 
 	void init(int ED_threshold, ED_modes mode = ED_LOCAL, bool SHD_enable = true);
+	void init_affine(int ms_penalty, int gap_open_penalty, int gap_ext_penalty);
 	int count_ID_length_avx(int lane_idx, int start_pos);
 
 	void convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1);
@@ -62,6 +67,14 @@ private:
 	ED_modes mode;
 	bool SHD_enable;
 	//__m128i shifted_mask;
+
+    // Affine mode
+    bool affine_mode;
+    int ms_penalty;
+    int gap_open_penalty;
+    int gap_ext_penalty;
+	int **I_pos;
+	int **D_pos;
 
 	// information of each lane
 	int *cur_ED;

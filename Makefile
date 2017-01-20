@@ -1,6 +1,6 @@
 EXECUTABLE = popcount bit_convert vectorED vectorLV vectorSHD_ED testRefDB# countPassFilter vector_filter string_cp shift test_SIMD_ED vectorED vectorLV sse.o diffED #ssse3_popcount test_modifier
 
-CXX = g++-5
+CXX = g++
 
 LD = ld
 
