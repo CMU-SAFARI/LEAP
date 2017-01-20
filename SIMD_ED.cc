@@ -63,26 +63,30 @@ SIMD_ED::SIMD_ED() {
 
 SIMD_ED::~SIMD_ED() {
 	if (total_lanes != 0) {
-		delete [] hamming_masks;
-		delete [] cur_ED;
-
-		for (int i = 0; i < total_lanes; i++) {
-			delete [] start[i];
-			delete [] end[i];
-		}
-
-		delete [] start;
-		delete [] end;
-
         if (affine_mode) {
+
 		    for (int i = 0; i < total_lanes; i++) {
                 delete [] M_pos[i];
                 delete [] I_pos[i];
                 delete [] D_pos[i];
             }
+
             delete [] M_pos;
             delete [] I_pos;
             delete [] D_pos;
+        }
+
+        else {
+            delete [] hamming_masks;
+            delete [] cur_ED;
+
+            for (int i = 0; i < total_lanes; i++) {
+                delete [] start[i];
+                delete [] end[i];
+            }
+
+            delete [] start;
+    		delete [] end;
         }
 
 		total_lanes = 0;
