@@ -271,12 +271,14 @@ void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, in
 	}
 
 	for (int i = 1; i < total_lanes - 1; i++) {
-        I_pos[i] = -1;
-        D_pos[i] = -1;
+		for (int e = 0; e <= af_threshold; e++) {
+			I_pos[i][e] = -1;
+        	D_pos[i][e] = -1;
+			start[i][e] = -1;
+			end[i][e] = -1;
+		}
 		int distance = abs(i - mid_lane);
-		if (distance != 0 && (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END) )
-			start[i][ED] = -1;
-		else
+		if (distance == 0 || mode == ED_LOCAL || mode == ED_SEMI_FREE_BEGIN)
 			start[i][0] = 0;
 	}
 
@@ -312,23 +314,6 @@ void SIMD_ED::run_affine() {
 				ED_pass = true;
 				return;
 			}
-			
-            if (l <= mid_lane)
-                top_offset = 1;
-            if (l >= mid_lane)
-				bot_offset = 1;
-            
-            I_pos[l-1][gap_open_penalty] = end[l][0] + top_offset;
-            D_pos[l+1][gap_open_penalty] = end[l][0] + bot_offset;
-
-            if (I_pos[l-1][gap_open_penalty] > start[l-1][gap_open_penalty]) )
-                start[l-1][gap_open_penalty] = I_pos[l-1][gap_open_penalty];
-
-            if (D_pos[l+1][gap_open_penalty] > start[l+1][gap_open_penalty]) )
-                start[l+1][gap_open_penalty] = D_pos[l+1][gap_open_penalty];
-
-            if (start[l][ms_penalty] < end[l][0] + 1)
-                start[l][ms_penalty] = end[l][0] + 1;
 		}
 	}
 	
@@ -336,12 +321,32 @@ void SIMD_ED::run_affine() {
 
 		for (int l = 1; l < total_lanes - 1; l++) {
             
-            if (l <= mid_lane)
-                top_offset = 1;
             if (l >= mid_lane)
+                top_offset = 1;
+            if (l <= mid_lane)
                 bot_offset = 1;
 
-            if (I_pos[l][e] >= 0 && I_pos[l][e] + top_offset > I_pos[l-1][e+gap_ext_penalty]) {
+			if ()
+			if (end[l-1][e-gap_open_penalty] < I_pos[l-1][e-gap_ext_penalty])
+				I_pos[l][e] = end[l-1][e-gap_open_penalty] + top_offset;
+			else if ()
+				I_pos[l][e] = I_pos[l-1][e-gap_ext_penalty] + top_offset;
+
+			if (end[l+1][e-gap_open_penalty] < D_pos[l+1][e-gap_ext_penalty])
+				D_pos[l][e] = end[l-1][e-gap_open_penalty] + bot_offset;
+			else
+				D_pos[l][e] = D_pos[l-1][e-gap_ext_penalty] + bot_offset;
+
+			start[l][e] = end[l][e-ms_penalty] + 1;
+
+			if (I_pos[l][e] > start[l][e])
+				start[l][e] = I_pos[l][e];
+
+			if (D_pos[l][e] > start[l][e])
+				start[l][e] = D_pos[l][e];
+
+			
+            if (end[l][I_pos[l][e] >= 0 && I_pos[l][e] + top_offset > I_pos[l-1][e+gap_ext_penalty]) {
                 I_pos[l-1][e+gap_ext_penalty] = I_pos[l][e] + top_offset;
 				if (I_pos[l-1][e+gap_ext_penalty] > start[l-1][e+gap_ext_penalty])
 					start[l-1][e+gap_ext_penalty] = I_pos[l-1][e+gap_ext_penalty];
