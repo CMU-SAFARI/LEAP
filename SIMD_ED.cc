@@ -319,7 +319,7 @@ void SIMD_ED::run_affine() {
 				bot_offset = 1;
             
             I_pos[l-1][gap_open_penalty] = end[l][0] + top_offset;
-            D_pos[l+1][gap_open_penalty] = end[l][0] + top_offset;
+            D_pos[l+1][gap_open_penalty] = end[l][0] + bot_offset;
 
             if (I_pos[l-1][gap_open_penalty] > start[l-1][gap_open_penalty]) )
                 start[l-1][gap_open_penalty] = I_pos[l-1][gap_open_penalty];
@@ -332,35 +332,34 @@ void SIMD_ED::run_affine() {
 		}
 	}
 	
-	for (int e = 1; e <= ED_t; e++) {
+	for (int e = 1; e <= af_threshold; e++) {
+
 		for (int l = 1; l < total_lanes - 1; l++) {
-			if (cur_ED[l] == e) {
-				
-#ifdef debug	
-				cout << "e: " << e << " l: " << l << endl;
-#endif
+            
+            if (l <= mid_lane)
+                top_offset = 1;
+            if (l >= mid_lane)
+                bot_offset = 1;
 
+            if (I_pos[l][e] >= 0 && I_pos[l][e] + top_offset > I_pos[l-1][e+gap_ext_penalty]) {
+                I_pos[l-1][e+gap_ext_penalty] = I_pos[l][e] + top_offset;
+				if (I_pos[l-1][e+gap_ext_penalty] > start[l-1][e+gap_ext_penalty])
+					start[l-1][e+gap_ext_penalty] = I_pos[l-1][e+gap_ext_penalty];
+            }
+            if (D_pos[l][e] >= 0 && D_pos[l][e] + bot_offset > D_pos[l+1][e+gap_ext_penalty]) {
+                D_pos[l+1][e+gap_ext_penalty] = D_pos[l][e] + bot_offset;
+				if (D_pos[l+1][e+gap_ext_penalty] > start[l+1][e+gap_ext_penalty])
+					start[l+1][e+gap_ext_penalty] = D_pos[l+1][e+gap_ext_penalty];
+            }
 
-				if (l >= mid_lane)
-					top_offset = 1;
-				if (l <= mid_lane)
-					bot_offset = 1;
-
-				// Find the largest starting position
-				int max_start = end[l][e-1] + 1;
-				if (end[l-1][e-1] + top_offset > max_start)
-					max_start = end[l-1][e-1] + top_offset;
-				if (end[l+1][e-1] + bot_offset > max_start)
-					max_start = end[l+1][e-1] + bot_offset;
-
-				start[l][e] = max_start;
-
+			if (start[l][e] >= 0) {
 				// Find the length of identical string
 				length = count_ID_length_avx(l, start[l][e]);
 
-				end[l][e] = max_start + length;
+				end[l][e] = start[l][e] + length;
 
 #ifdef debug	
+				cout << "e: " << e << " l: " << l << endl;
 				cout << "start[" << l << "][" << e << "]: " << start[l][e];
 				cout << "   end[" << l << "][" << e << "]: " << end[l][e] << endl;
 #endif
@@ -373,7 +372,20 @@ void SIMD_ED::run_affine() {
 					break;
 				}
 
-				cur_ED[l]++;
+				if (end[l][e] + top_offset > I_pos[l-1][e+gap_open_penalty]) {
+					I_pos[l-1][e+gap_open_penalty] = end[l][e] + top_offset;
+					if (I_pos[l-1][e+gap_open_penalty] > start[l-1][e+gap_open_penalty])
+						start[l-1][e+gap_open_penalty] = I_pos[l-1][e+gap_open_penalty];
+				}
+				if (end[l][e] + bot_offset > D_pos[l+1][e+gap_open_penalty]) {
+					D_pos[l+1][e+gap_open_penalty] = end[l][e] + bot_offset;
+					if (D_pos[l+1][e+gap_open_penalty] > start[l+1][e+gap_open_penalty])
+						start[l+1][e+gap_open_penalty] = D_pos[l+1][e+gap_open_penalty];
+				}
+
+				if (start[l][e+ms_penalty] < end[l][e] + 1)
+					start[l][e+ms_penalty] = end[l][e] + 1;
+				
 			}
 		}
 
