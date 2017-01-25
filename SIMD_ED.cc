@@ -220,6 +220,13 @@ void SIMD_ED::init_levenshtein(int ED_threshold, ED_modes mode, bool SHD_enable)
 		end[i] = new int [ED_t + 1]();
 	}
 
+	for (int i = 0; i < total_lanes; i++) {
+		for (int j = 0; j < ED_t; j++) {
+			start[i][j] = -2;
+			end[i][j] = -2;
+		}
+	}
+
 	for (int i = 1; i < total_lanes - 1; i++) {
 		int ED = abs(i - mid_lane);
 		if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END)
@@ -323,27 +330,36 @@ void SIMD_ED::run_levenshtein() {
 	}
 
 	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
-		int converge_ED = final_ED + abs(final_lane_idx - mid_lane);
-		if (converge_ED > ED_t)
-			ED_pass = false;
+		converge_ED = final_ED + abs(final_lane_idx - mid_lane);
+		ED_pass = converge_ED <= ED_t;
 	}
 }
 
 void SIMD_ED::backtrack_levenshtein() {
 
+#ifdef debug	
+				cout << "in backtrack!" << endl;
+#endif
+
+	ED_count = 0;
+
 	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
 		for (int e = converge_ED; e > final_ED; e--) {
-			ED_info[e].id_length = 0;
+#ifdef debug	
+			cout << "e: " << e << endl;
+#endif
+			ED_info[ED_count].id_length = 0;
 			if (final_lane_idx > mid_lane)
-				ED_info[e].type = A_INS;
+				ED_info[ED_count].type = B_INS;
 			else
-				ED_info[e].type = B_INS;
+				ED_info[ED_count].type = A_INS;
+
+			ED_count++;
 		}
 	}
 
 	int lane_idx = final_lane_idx;
 	int ED_probe = final_ED;
-	ED_count = 0;
 
 	while (ED_probe != 0) {
 
@@ -364,13 +380,22 @@ void SIMD_ED::backtrack_levenshtein() {
 			bot_offset = 1;
 
 		if (start[lane_idx][ED_probe] == (end[lane_idx][ED_probe - 1] + 1) ) {
+#ifdef debug
+			cout << "M" << endl;
+#endif
 			ED_info[ED_count].type = MISMATCH;
 		}
 		else if (start[lane_idx][ED_probe] == end[lane_idx - 1][ED_probe - 1] + top_offset) {
+#ifdef debug
+			cout << "I" << endl;
+#endif
 			lane_idx = lane_idx - 1;
 			ED_info[ED_count].type = A_INS;
 		}
 		else if (start[lane_idx][ED_probe] == end[lane_idx + 1][ED_probe - 1] + bot_offset) {
+#ifdef debug
+			cout << "D" << endl;
+#endif
 			lane_idx = lane_idx + 1;
 			ED_info[ED_count].type = B_INS;
 		}
@@ -383,6 +408,11 @@ void SIMD_ED::backtrack_levenshtein() {
 
 	int match_count = end[lane_idx][ED_probe] - start[lane_idx][ED_probe];
 	ED_info[ED_count].id_length = match_count;
+#ifdef debug
+		cout << "end[" << lane_idx << "][" << ED_probe  << "]: " << end[lane_idx][ED_probe];
+		cout << "    start[" << lane_idx << "][" << ED_probe << "]: " << start[lane_idx][ED_probe] << endl;
+	cout << "mid_lane: " << mid_lane << endl;
+#endif
 }
 
 void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, int ms_penalty, int gap_open_penalty, int gap_ext_penalty, bool SHD_enable, int SHD_threshold) {
@@ -540,9 +570,9 @@ void SIMD_ED::backtrack_affine() {
 		for (int e = 0; e <abs(mid_lane - final_lane_idx); e++) {
 			ED_info[e].id_length = 0;
 			if (final_lane_idx > mid_lane)
-				ED_info[e].type = A_INS;
-			else
 				ED_info[e].type = B_INS;
+			else
+				ED_info[e].type = A_INS;
 		}
 	}
 
@@ -675,7 +705,7 @@ string SIMD_ED::get_CIGAR() {
 	CIGAR = to_string(ED_info[ED_count].id_length);
 	//sprintf(buffer, "%d", ED_info[0].id_length);
 	//CIGAR = string(buffer);
-	for (int i = ED_count; i >= 0; i--) {
+	for (int i = ED_count - 1; i >= 0; i--) {
 		switch (ED_info[i].type) {
 		case MISMATCH:
 			CIGAR += 'M';
@@ -690,7 +720,7 @@ string SIMD_ED::get_CIGAR() {
 
 		//sprintf(buffer, "%d", ED_info[0].id_length);
 		//CIGAR += string(buffer);
-		CIGAR += to_string(ED_info[i-1].id_length);
+		CIGAR += to_string(ED_info[i].id_length);
 	}
 
 	return CIGAR;
