@@ -87,6 +87,7 @@ private:
     int gap_ext_penalty;
 	int **I_pos;
 	int **D_pos;
+	int ED_count;
 
 	// information of each lane
 	int *cur_ED;
