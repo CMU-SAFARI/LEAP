@@ -443,13 +443,13 @@ void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, in
 
 
 	for (int i = 0; i < total_lanes; i++) {
-		start[i] = new int [gap_threshold + 1]();
-		end[i] = new int [gap_threshold + 1]();
-        I_pos[i] = new int [gap_threshold + 1]();
-        D_pos[i] = new int [gap_threshold + 1]();
+		start[i] = new int [af_threshold + 1]();
+		end[i] = new int [af_threshold + 1]();
+        I_pos[i] = new int [af_threshold + 1]();
+        D_pos[i] = new int [af_threshold + 1]();
 	}
 
-	for (int i = 1; i < total_lanes - 1; i++) {
+	for (int i = 0; i < total_lanes; i++) {
 		for (int e = 0; e <= af_threshold; e++) {
 			I_pos[i][e] = -2;
 			D_pos[i][e] = -2;
@@ -479,7 +479,7 @@ void SIMD_ED::run_affine() {
 
 	for (int l = 1; l < total_lanes - 1; l++) {
 		if (start[l][0] >= 0) {
-			int lane_diff = abs(final_lane_idx - mid_lane);
+			int lane_diff = abs(l - mid_lane);
 			length = count_ID_length_avx(l, lane_diff);
 	
 #ifdef debug
@@ -514,24 +514,48 @@ void SIMD_ED::run_affine() {
 				bot_offset = 0;
 
 			// Assuming gap_open_penalty > gap_ext_penalty
-			if (e >= gap_open_penalty && end[l-1][e-gap_open_penalty] >= 0 && end[l-1][e-gap_open_penalty] > I_pos[l-1][e-gap_ext_penalty])
+			if (e >= gap_open_penalty && end[l-1][e-gap_open_penalty] >= 0 && end[l-1][e-gap_open_penalty] > I_pos[l-1][e-gap_ext_penalty]) {
 				I_pos[l][e] = end[l-1][e-gap_open_penalty] + top_offset;
-			else if (I_pos[l-1][e-gap_ext_penalty] >= 0)
-				I_pos[l][e] = I_pos[l-1][e-gap_ext_penalty] + top_offset;
+#ifdef debug	
+				cout << "Update I[" << l << "][" << e << "] from open from e[" << l-1 << "][" << e-gap_open_penalty << "]" << end[l-1][e-gap_open_penalty] << endl;
+#endif
+			}
+			else if (e >= gap_ext_penalty && I_pos[l-1][e-gap_ext_penalty] >= 0) {
+#ifdef debug	
+				cout << "Update I[" << l << "][" << e << "] from ext from I[" << l-1 << "][" << e-gap_ext_penalty << "]" << I_pos[l-1][e-gap_ext_penalty] << endl;
+#endif
+			I_pos[l][e] = I_pos[l-1][e-gap_ext_penalty] + top_offset;
+			}
 
-			if (e >= gap_open_penalty && end[l-1][e-gap_open_penalty] >= 0 && end[l+1][e-gap_open_penalty] > D_pos[l+1][e-gap_ext_penalty])
-				D_pos[l][e] = end[l-1][e-gap_open_penalty] + bot_offset;
-			else if (D_pos[l-1][e-gap_ext_penalty] >= 0)
-				D_pos[l][e] = D_pos[l-1][e-gap_ext_penalty] + bot_offset;
+			if (e >= gap_open_penalty && end[l+1][e-gap_open_penalty] >= 0 && end[l+1][e-gap_open_penalty] > D_pos[l+1][e-gap_ext_penalty])
+				D_pos[l][e] = end[l+1][e-gap_open_penalty] + bot_offset;
+			else if (e >= gap_ext_penalty && D_pos[l+1][e-gap_ext_penalty] >= 0)
+				D_pos[l][e] = D_pos[l+1][e-gap_ext_penalty] + bot_offset;
 
-			if (e >= ms_penalty && end[l][e-ms_penalty] >= 0)	
+			if (e >= ms_penalty && end[l][e-ms_penalty] >= 0) {
 				start[l][e] = end[l][e-ms_penalty] + 1;
+#ifdef debug	
+				cout << "coming from end[" << l << "][" << e-ms_penalty << "]:" << end[l][e-ms_penalty] << endl;
+#endif
+			}
 
-			if (I_pos[l][e] > start[l][e])
+			if (I_pos[l][e] > start[l][e]) {
 				start[l][e] = I_pos[l][e];
+#ifdef debug	
+				cout << "coming from I[" << l << "][" << e << "]:" << I_pos[l][e] << endl;
+#endif
+			}
 
-			if (D_pos[l][e] > start[l][e])
+			if (D_pos[l][e] > start[l][e]) {
 				start[l][e] = D_pos[l][e];
+#ifdef debug	
+				cout << "coming from D[" << l << "][" << e << "]:" << D_pos[l][e] << endl;
+#endif
+			}
+
+#ifdef debug	
+				cout << "***start[" << l << "][" << e << "]:" << start[l][e] << endl;
+#endif
 
 			if (start[l][e] >= 0) {
 				length = count_ID_length_avx(l, start[l][e]);
@@ -566,13 +590,16 @@ void SIMD_ED::run_affine() {
 
 void SIMD_ED::backtrack_affine() {
 
+	ED_count = 0;
+
 	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
 		for (int e = 0; e <abs(mid_lane - final_lane_idx); e++) {
-			ED_info[e].id_length = 0;
+			ED_info[ED_count].id_length = 0;
 			if (final_lane_idx > mid_lane)
-				ED_info[e].type = B_INS;
+				ED_info[ED_count].type = B_INS;
 			else
-				ED_info[e].type = A_INS;
+				ED_info[ED_count].type = A_INS;
+			ED_count++;
 		}
 	}
 
@@ -582,7 +609,6 @@ void SIMD_ED::backtrack_affine() {
 	int top_offset = 0;
 	int bot_offset = 0;
 
-	ED_count = 0;
 
 	while (ED_probe != 0) {
 
@@ -617,7 +643,7 @@ void SIMD_ED::backtrack_affine() {
 
 			}
 			// When it stops extending, it must open a gap
-			assert(I_pos[lane_idx-1][ED_probe-gap_open_penalty] + top_offset == I_pos[lane_idx][ED_probe]);
+			assert(end[lane_idx-1][ED_probe-gap_open_penalty] + top_offset == I_pos[lane_idx][ED_probe]);
 			ED_info[ED_count].type = A_INS;
 			ED_count++;
 
@@ -632,7 +658,7 @@ void SIMD_ED::backtrack_affine() {
 			else
 				bot_offset = 0;
 
-			while (D_pos[lane_idx+1][ED_probe-gap_ext_penalty] + top_offset == D_pos[lane_idx][ED_probe]) {
+			while (D_pos[lane_idx+1][ED_probe-gap_ext_penalty] + bot_offset == D_pos[lane_idx][ED_probe]) {
 				ED_info[ED_count].type = B_INS;
 				ED_count++;
 				// Prepare for the next edit
@@ -648,7 +674,7 @@ void SIMD_ED::backtrack_affine() {
 
 			}
 			// When it stops extending, it must open a gap
-			assert(D_pos[lane_idx+1][ED_probe-gap_open_penalty] + top_offset == D_pos[lane_idx][ED_probe]);
+			assert(end[lane_idx+1][ED_probe-gap_open_penalty] + bot_offset == D_pos[lane_idx][ED_probe]);
 			ED_info[ED_count].type = B_INS;
 			ED_count++;
 
@@ -656,7 +682,7 @@ void SIMD_ED::backtrack_affine() {
 			ED_probe -= gap_open_penalty;
 		}
 		else {
-			assert(start[lane_idx][ED_probe] == end[lane_idx][ED_probe - ms_penalty]);
+			assert(start[lane_idx][ED_probe] == end[lane_idx][ED_probe - ms_penalty] + 1);
 			ED_info[ED_count].type = MISMATCH;
 			ED_count++;
 			ED_probe -= ms_penalty;
