@@ -79,7 +79,8 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
-	ed_obj.init(error, ED_LOCAL, false);
+	//ed_obj.init_levenshtein(error, ED_GLOBAL, false);
+	ed_obj.init_affine(error, error * 2, ED_GLOBAL, 2, 3, 1);
 
 	do {
 		//clear past result
@@ -130,8 +131,8 @@ int main(int argc, char* argv[]) {
 			ed_obj.reset();
 			ed_obj.run();
 			if (ed_obj.check_pass() ) {
-				//ed_obj.backtrack();
-				//fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+				ed_obj.backtrack();
+				fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
 				valid_buff[read_idx] = true;
 			}
 /*

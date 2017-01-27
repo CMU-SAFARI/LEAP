@@ -1,6 +1,7 @@
 #include <cstdio>
 #include "SIMD_ED.h"
 #include "SHD.h"
+#include <cassert>
 
 int SIMD_ED::count_ID_length_avx(int lane_idx, int start_pos) {
 	__m256i shifted_mask = shift_left_avx(hamming_masks[lane_idx], start_pos);
@@ -62,69 +63,42 @@ SIMD_ED::SIMD_ED() {
 
 SIMD_ED::~SIMD_ED() {
 	if (total_lanes != 0) {
+        if (affine_mode) {
+
+		    for (int i = 0; i < total_lanes; i++) {
+                delete [] I_pos[i];
+                delete [] D_pos[i];
+            }
+
+            delete [] I_pos;
+            delete [] D_pos;
+        }
+		else
+			delete [] cur_ED;
+
 		delete [] hamming_masks;
-		delete [] cur_ED;
 
 		for (int i = 0; i < total_lanes; i++) {
 			delete [] start[i];
 			delete [] end[i];
-            delete [] I_pos[i];
-            delete [] D_pos[i];
 		}
 
 		delete [] start;
 		delete [] end;
-        delete [] I_pos;
-        delete [] D_pos;
 
 		total_lanes = 0;
+
+		hamming_masks = NULL;
+
+		cur_ED = NULL;
+		start = NULL;
+		end = NULL;
+		SHD_enable = false;
+
+		affine_mode = false;
+		I_pos = NULL;
+		D_pos = NULL;
 	}
-}
-
-void SIMD_ED::init(int ED_threshold, ED_modes mode, bool SHD_enable) {
-	this->SHD_enable = SHD_enable;
-
-	if (total_lanes != 0)
-		this->~SIMD_ED();
-
-	ED_t = ED_threshold;
-
-	this->mode = mode;
-	total_lanes = 2 * ED_t + 3;
-	mid_lane = ED_t + 1;
-
-	hamming_masks = new __m256i [total_lanes];
-
-	cur_ED = new int[total_lanes];
-	ED_info = new ED_INFO[ED_t + 1];
-
-	start = new int* [total_lanes];
-	end = new int* [total_lanes];
-	I_pos = new int* [total_lanes];
-	D_pos = new int* [total_lanes];
-
-	for (int i = 0; i < total_lanes; i++) {
-		start[i] = new int [ED_t + 1]();
-		end[i] = new int [ED_t + 1]();
-		I_pos[i] = new int [ED_t + 1]();
-		D_pos[i] = new int [ED_t + 1]();
-	}
-
-	for (int i = 1; i < total_lanes - 1; i++) {
-		int ED = abs(i - mid_lane);
-		if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END)
-			start[i][ED] = ED;
-		else
-			start[i][0] = ED;
-	}
-}
-
-void SIMD_ED::init_affine(int ms_penalty, int gap_open_penalty, int gap_ext_penalty) {
-    affine_mode = true;
-    this->ms_penalty = ms_penalty;
-    this->gap_open_penalty = gap_open_penalty;
-    this->gap_ext_penalty = gap_ext_penalty;
-
 }
 
 void SIMD_ED::convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1) {
@@ -220,7 +194,49 @@ void SIMD_ED::calculate_masks() {
 	}
 }
 
-void SIMD_ED::reset() {
+void SIMD_ED::init_levenshtein(int ED_threshold, ED_modes mode, bool SHD_enable) {
+    // just to clear the affine mode data.
+    this->~SIMD_ED();
+
+	this->SHD_enable = SHD_enable;
+	this->affine_mode = false;
+
+	ED_t = ED_threshold;
+
+	this->mode = mode;
+	total_lanes = 2 * ED_t + 3;
+	mid_lane = ED_t + 1;
+
+	hamming_masks = new __m256i [total_lanes];
+
+	cur_ED = new int[total_lanes];
+	ED_info = new ED_INFO[ED_t + 1];
+
+	start = new int* [total_lanes];
+	end = new int* [total_lanes];
+
+	for (int i = 0; i < total_lanes; i++) {
+		start[i] = new int [ED_t + 1]();
+		end[i] = new int [ED_t + 1]();
+	}
+
+	for (int i = 0; i < total_lanes; i++) {
+		for (int j = 0; j < ED_t; j++) {
+			start[i][j] = -2;
+			end[i][j] = -2;
+		}
+	}
+
+	for (int i = 1; i < total_lanes - 1; i++) {
+		int ED = abs(i - mid_lane);
+		if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END)
+			start[i][ED] = ED;
+		else
+			start[i][0] = ED;
+	}
+}
+
+void SIMD_ED::reset_levenshtein() {
 	ED_pass = false;
 	for (int i = 1; i < total_lanes - 1; i++) {
 		if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END) {
@@ -233,7 +249,7 @@ void SIMD_ED::reset() {
 	}
 }
 
-void SIMD_ED::run() {
+void SIMD_ED::run_levenshtein() {
 	if (SHD_enable && !bit_vec_filter_avx(hamming_masks+1, buffer_length, ED_t) ) {
 		ED_pass = false;
 		return;
@@ -243,7 +259,7 @@ void SIMD_ED::run() {
 
 	for (int l = 1; l < total_lanes - 1; l++) {
 		if (cur_ED[l] == 0) {
-			length = count_ID_length_avx(l, 0);
+			length = count_ID_length_avx(l, start[l][0]);
 	
 #ifdef debug
 			cout << "length result: " << length << " buffer_length: " << buffer_length << endl;
@@ -314,32 +330,38 @@ void SIMD_ED::run() {
 	}
 
 	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
-		int converge_ED = final_ED + abs(final_lane_idx - mid_lane);
-		if (converge_ED > ED_t)
-			ED_pass = false;
+		converge_ED = final_ED + abs(final_lane_idx - mid_lane);
+		ED_pass = converge_ED <= ED_t;
 	}
 }
 
-bool SIMD_ED::check_pass() {
-	return ED_pass;
-}
+void SIMD_ED::backtrack_levenshtein() {
 
-void SIMD_ED::backtrack() {
+#ifdef debug	
+				cout << "in backtrack!" << endl;
+#endif
+
+	ED_count = 0;
 
 	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
 		for (int e = converge_ED; e > final_ED; e--) {
-			ED_info[e].id_length = 0;
+#ifdef debug	
+			cout << "e: " << e << endl;
+#endif
+			ED_info[ED_count].id_length = 0;
 			if (final_lane_idx > mid_lane)
-				ED_info[e].type = A_INS;
+				ED_info[ED_count].type = B_INS;
 			else
-				ED_info[e].type = B_INS;
+				ED_info[ED_count].type = A_INS;
+
+			ED_count++;
 		}
 	}
 
 	int lane_idx = final_lane_idx;
 	int ED_probe = final_ED;
 
-	while (start[lane_idx][ED_probe] != abs(lane_idx - mid_lane) ) {
+	while (ED_probe != 0) {
 
 #ifdef debug
 		cout << "end[" << lane_idx << "][" << ED_probe  << "]: " << end[lane_idx][ED_probe];
@@ -347,7 +369,7 @@ void SIMD_ED::backtrack() {
 #endif
 
 		int match_count = end[lane_idx][ED_probe] - start[lane_idx][ED_probe];
-		ED_info[ED_probe].id_length = match_count;
+		ED_info[ED_count].id_length = match_count;
 
 		int top_offset = 0;
 		int bot_offset = 0;
@@ -358,42 +380,342 @@ void SIMD_ED::backtrack() {
 			bot_offset = 1;
 
 		if (start[lane_idx][ED_probe] == (end[lane_idx][ED_probe - 1] + 1) ) {
-			ED_info[ED_probe].type = MISMATCH;
+#ifdef debug
+			cout << "M" << endl;
+#endif
+			ED_info[ED_count].type = MISMATCH;
 		}
 		else if (start[lane_idx][ED_probe] == end[lane_idx - 1][ED_probe - 1] + top_offset) {
+#ifdef debug
+			cout << "I" << endl;
+#endif
 			lane_idx = lane_idx - 1;
-			ED_info[ED_probe].type = A_INS;
+			ED_info[ED_count].type = A_INS;
 		}
 		else if (start[lane_idx][ED_probe] == end[lane_idx + 1][ED_probe - 1] + bot_offset) {
+#ifdef debug
+			cout << "D" << endl;
+#endif
 			lane_idx = lane_idx + 1;
-			ED_info[ED_probe].type = B_INS;
+			ED_info[ED_count].type = B_INS;
 		}
 		else
 			cerr << "Error! No lane!!" << endl;
 		
 		ED_probe--;
+		ED_count++;
+	}
+
+	int match_count = end[lane_idx][ED_probe] - start[lane_idx][ED_probe];
+	ED_info[ED_count].id_length = match_count;
+#ifdef debug
+		cout << "end[" << lane_idx << "][" << ED_probe  << "]: " << end[lane_idx][ED_probe];
+		cout << "    start[" << lane_idx << "][" << ED_probe << "]: " << start[lane_idx][ED_probe] << endl;
+	cout << "mid_lane: " << mid_lane << endl;
+#endif
+}
+
+void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, int ms_penalty, int gap_open_penalty, int gap_ext_penalty, bool SHD_enable, int SHD_threshold) {
+    // just to clear the normal mode data.
+    this->~SIMD_ED();
+    affine_mode = true;
+    this->ms_penalty = ms_penalty;
+    this->gap_open_penalty = gap_open_penalty;
+    this->gap_ext_penalty = gap_ext_penalty;
+
+ 	this->gap_threshold = gap_threshold;
+    this->af_threshold = af_threshold;
+
+    this->SHD_enable = SHD_enable;
+    this->SHD_threshold = SHD_threshold;
+
+	this->mode = mode;
+ 
+ 	total_lanes = 2 * gap_threshold + 3;
+	mid_lane = gap_threshold + 1;
+	hamming_masks = new __m256i [total_lanes];
+	ED_info = new ED_INFO[af_threshold + 1];
+
+	start = new int* [total_lanes];
+	end = new int* [total_lanes];
+	I_pos = new int* [total_lanes];
+	D_pos = new int* [total_lanes];
+
+
+	for (int i = 0; i < total_lanes; i++) {
+		start[i] = new int [af_threshold + 1]();
+		end[i] = new int [af_threshold + 1]();
+        I_pos[i] = new int [af_threshold + 1]();
+        D_pos[i] = new int [af_threshold + 1]();
+	}
+
+	for (int i = 0; i < total_lanes; i++) {
+		for (int e = 0; e <= af_threshold; e++) {
+			I_pos[i][e] = -2;
+			D_pos[i][e] = -2;
+			start[i][e] = -2;
+			end[i][e] = -2;
+		}
+		int distance = abs(i - mid_lane);
+		if (distance == 0 || mode == ED_LOCAL || mode == ED_SEMI_FREE_BEGIN)
+			start[i][0] = distance;
+	}
+
+}
+
+void SIMD_ED::reset_affine() {
+	ED_pass = false;
+}
+
+void SIMD_ED::run_affine() {
+	if (SHD_enable && !bit_vec_filter_avx(hamming_masks+1, buffer_length, SHD_threshold) ) {
+		ED_pass = false;
+		return;
+	}
+
+	int length;
+	int top_offset = 0;
+    int bot_offset = 0;
+
+	for (int l = 1; l < total_lanes - 1; l++) {
+		if (start[l][0] >= 0) {
+			int lane_diff = abs(l - mid_lane);
+			length = count_ID_length_avx(l, lane_diff);
+	
+#ifdef debug
+			cout << "length result: " << length << " buffer_length: " << buffer_length << endl;
+#endif
+	
+			end[l][0] = length + start[l][0];
+	
+			if (end[l][0] == buffer_length) {
+				final_lane_idx = l;
+				final_ED = 0;
+				ED_pass = true;
+				return;
+			}
+		}
+	}
+	
+	for (int e = 1; e <= af_threshold; e++) {
+
+		for (int l = 1; l < total_lanes - 1; l++) {
+
+			// top_offset means the path is going down
+            if (l >= mid_lane)
+                top_offset = 1;
+			else
+				top_offset = 0;	
+
+			// bot_offset means the path is going up
+            if (l <= mid_lane)
+                bot_offset = 1;
+			else
+				bot_offset = 0;
+
+			// Assuming gap_open_penalty > gap_ext_penalty
+			if (e >= gap_open_penalty && end[l-1][e-gap_open_penalty] >= 0 && end[l-1][e-gap_open_penalty] > I_pos[l-1][e-gap_ext_penalty]) {
+				I_pos[l][e] = end[l-1][e-gap_open_penalty] + top_offset;
+#ifdef debug	
+				cout << "Update I[" << l << "][" << e << "] from open from e[" << l-1 << "][" << e-gap_open_penalty << "]" << end[l-1][e-gap_open_penalty] << endl;
+#endif
+			}
+			else if (e >= gap_ext_penalty && I_pos[l-1][e-gap_ext_penalty] >= 0) {
+#ifdef debug	
+				cout << "Update I[" << l << "][" << e << "] from ext from I[" << l-1 << "][" << e-gap_ext_penalty << "]" << I_pos[l-1][e-gap_ext_penalty] << endl;
+#endif
+			I_pos[l][e] = I_pos[l-1][e-gap_ext_penalty] + top_offset;
+			}
+
+			if (e >= gap_open_penalty && end[l+1][e-gap_open_penalty] >= 0 && end[l+1][e-gap_open_penalty] > D_pos[l+1][e-gap_ext_penalty])
+				D_pos[l][e] = end[l+1][e-gap_open_penalty] + bot_offset;
+			else if (e >= gap_ext_penalty && D_pos[l+1][e-gap_ext_penalty] >= 0)
+				D_pos[l][e] = D_pos[l+1][e-gap_ext_penalty] + bot_offset;
+
+			if (e >= ms_penalty && end[l][e-ms_penalty] >= 0) {
+				start[l][e] = end[l][e-ms_penalty] + 1;
+#ifdef debug	
+				cout << "coming from end[" << l << "][" << e-ms_penalty << "]:" << end[l][e-ms_penalty] << endl;
+#endif
+			}
+
+			if (I_pos[l][e] > start[l][e]) {
+				start[l][e] = I_pos[l][e];
+#ifdef debug	
+				cout << "coming from I[" << l << "][" << e << "]:" << I_pos[l][e] << endl;
+#endif
+			}
+
+			if (D_pos[l][e] > start[l][e]) {
+				start[l][e] = D_pos[l][e];
+#ifdef debug	
+				cout << "coming from D[" << l << "][" << e << "]:" << D_pos[l][e] << endl;
+#endif
+			}
+
+#ifdef debug	
+				cout << "***start[" << l << "][" << e << "]:" << start[l][e] << endl;
+#endif
+
+			if (start[l][e] >= 0) {
+				length = count_ID_length_avx(l, start[l][e]);
+				end[l][e] = start[l][e] + length;
+
+#ifdef debug	
+				cout << "e: " << e << " l: " << l << endl;
+				cout << "start[" << l << "][" << e << "]: " << start[l][e];
+				cout << "   end[" << l << "][" << e << "]: " << end[l][e] << endl;
+#endif
+
+				if (end[l][e] == buffer_length) {
+					final_lane_idx = l;
+					final_ED = e;
+					ED_pass = true;
+					
+					break;
+				}
+			}
+		}
+
+		if (ED_pass)
+			break;
+	}
+
+	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
+		int lane_diff = abs(final_lane_idx - mid_lane);
+		converge_ED = final_ED + gap_open_penalty + (lane_diff - 1)	* gap_ext_penalty;
+		ED_pass = converge_ED <= af_threshold;
+	}
+}
+
+void SIMD_ED::backtrack_affine() {
+
+	ED_count = 0;
+
+	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
+		for (int e = 0; e <abs(mid_lane - final_lane_idx); e++) {
+			ED_info[ED_count].id_length = 0;
+			if (final_lane_idx > mid_lane)
+				ED_info[ED_count].type = B_INS;
+			else
+				ED_info[ED_count].type = A_INS;
+			ED_count++;
+		}
+	}
+
+	int lane_idx = final_lane_idx;
+	int ED_probe = final_ED;
+
+	int top_offset = 0;
+	int bot_offset = 0;
+
+
+	while (ED_probe != 0) {
+
+#ifdef debug
+		cout << "end[" << lane_idx << "][" << ED_probe  << "]: " << end[lane_idx][ED_probe];
+		cout << "    start[" << lane_idx << "][" << ED_probe << "]: " << start[lane_idx][ED_probe] << endl;
+#endif
+
+		int match_count = end[lane_idx][ED_probe] - start[lane_idx][ED_probe];
+		ED_info[ED_count].id_length = match_count;
+
+		if (start[lane_idx][ED_probe] == I_pos[lane_idx][ED_probe])	{
+
+			if (lane_idx >= mid_lane)
+				top_offset = 1;
+			else
+				top_offset = 0;
+
+			while (I_pos[lane_idx - 1][ED_probe-gap_ext_penalty] + top_offset == I_pos[lane_idx][ED_probe]) {
+				ED_info[ED_count].type = A_INS;
+				ED_count++;
+				// Prepare for the next edit
+				ED_info[ED_count].id_length = 0;
+
+				lane_idx--;
+				ED_probe -= gap_ext_penalty;
+
+				if (lane_idx >= mid_lane)
+					top_offset = 1;
+				else
+					top_offset = 0;
+
+			}
+			// When it stops extending, it must open a gap
+			assert(end[lane_idx-1][ED_probe-gap_open_penalty] + top_offset == I_pos[lane_idx][ED_probe]);
+			ED_info[ED_count].type = A_INS;
+			ED_count++;
+
+			lane_idx--;
+			ED_probe -= gap_open_penalty;
+
+		}
+		else if (start[lane_idx][ED_probe] == D_pos[lane_idx][ED_probe]) {
+
+			if (lane_idx <= mid_lane)
+				bot_offset = 1;
+			else
+				bot_offset = 0;
+
+			while (D_pos[lane_idx+1][ED_probe-gap_ext_penalty] + bot_offset == D_pos[lane_idx][ED_probe]) {
+				ED_info[ED_count].type = B_INS;
+				ED_count++;
+				// Prepare for the next edit
+				ED_info[ED_count].id_length = 0;
+
+				lane_idx++;
+				ED_probe -= gap_ext_penalty;
+
+				if (lane_idx <= mid_lane)
+					bot_offset = 1;
+				else
+					bot_offset = 0;
+
+			}
+			// When it stops extending, it must open a gap
+			assert(end[lane_idx+1][ED_probe-gap_open_penalty] + bot_offset == D_pos[lane_idx][ED_probe]);
+			ED_info[ED_count].type = B_INS;
+			ED_count++;
+
+			lane_idx++;
+			ED_probe -= gap_open_penalty;
+		}
+		else {
+			assert(start[lane_idx][ED_probe] == end[lane_idx][ED_probe - ms_penalty] + 1);
+			ED_info[ED_count].type = MISMATCH;
+			ED_count++;
+			ED_probe -= ms_penalty;
+		}
 	}
 
 	int match_count = end[lane_idx][ED_probe] - start[lane_idx][ED_probe];
 	ED_info[ED_probe].id_length = match_count;
+}
 
-	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END) {
-		if (lane_idx < mid_lane) {
-			for (int i = mid_lane - lane_idx; i > 0; i--) {
-				ED_info[ED_probe].type = B_INS;
-				ED_info[ED_probe - 1].id_length = 0;
-				ED_probe--;
-			}
-		}
-		else if (lane_idx > mid_lane) {
-			for (int i = lane_idx - mid_lane; i > 0; i--) {
-				ED_info[ED_probe].type = A_INS;
-				ED_info[ED_probe - 1].id_length = 0;
-				ED_probe--;
-			}
-		}
-	}
+void SIMD_ED::reset() {
+	if (affine_mode)
+		reset_affine();
+	else
+		reset_levenshtein();
+}
 
+void SIMD_ED::run() {
+	if (affine_mode)
+		run_affine();
+	else
+		run_levenshtein();
+}
+
+void SIMD_ED::backtrack() {
+	if (affine_mode)
+		backtrack_affine();
+	else
+		backtrack_levenshtein();
+}
+
+bool SIMD_ED::check_pass() {
+	return ED_pass;
 }
 
 int SIMD_ED::get_ED() {
@@ -406,10 +728,10 @@ int SIMD_ED::get_ED() {
 string SIMD_ED::get_CIGAR() {
 	//char buffer[32];
 	string CIGAR;
-	CIGAR = to_string(ED_info[0].id_length);
+	CIGAR = to_string(ED_info[ED_count].id_length);
 	//sprintf(buffer, "%d", ED_info[0].id_length);
 	//CIGAR = string(buffer);
-	for (int i = 1; i <= final_ED; i++) {
+	for (int i = ED_count - 1; i >= 0; i--) {
 		switch (ED_info[i].type) {
 		case MISMATCH:
 			CIGAR += 'M';

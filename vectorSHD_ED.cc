@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
-	ed_obj.init(error);
+	ed_obj.init_levenshtein(error, ED_LOCAL, false);
 
 	do {
 		//clear past result
@@ -127,6 +127,7 @@ int main(int argc, char* argv[]) {
 			
 			//int length_t = read_strs[read_idx].length();
 			int length_t = length[read_idx];
+/*
 			__m256i read0_YMM = _mm256_loadu_si256((__m256i*) read0[read_idx]);
 			__m256i read1_YMM = _mm256_loadu_si256((__m256i*) read1[read_idx]);
 			__m256i ref0_YMM = _mm256_loadu_si256((__m256i*) ref0[read_idx]);
@@ -161,20 +162,19 @@ int main(int argc, char* argv[]) {
 			cout << endl;
 			print256_bit(ref1_YMM);
 #endif
+*/
 
 
-			if (bit_vec_filter_avx(read0_YMM, read1_YMM, ref0_YMM, ref1_YMM, length_t, error) ) {
 				//valid_buff[read_idx] = true; }
 				//ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length_t);
-				ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length_t);
-				ed_obj.calculate_masks();
-				ed_obj.reset();
-				ed_obj.run();
-				if (ed_obj.check_pass() ) {
-					//ed_obj.backtrack();
-					//fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
-					valid_buff[read_idx] = true;
-				}
+			ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length_t);
+			ed_obj.calculate_masks();
+			ed_obj.reset();
+			ed_obj.run();
+			if (ed_obj.check_pass() ) {
+				//ed_obj.backtrack();
+				//fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+				valid_buff[read_idx] = true;
 			}
 /*
 */
