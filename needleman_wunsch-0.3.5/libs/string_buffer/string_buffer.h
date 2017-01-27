@@ -64,8 +64,8 @@ char* string_buff_as_str(const STRING_BUFFER* sbuf);
 void string_buff_reset(STRING_BUFFER* sbuf);
 
 // Get size
-inline t_buf_pos string_buff_strlen(const STRING_BUFFER* sbuf);
-inline t_buf_pos string_buff_size(const STRING_BUFFER* sbuf);
+t_buf_pos string_buff_strlen(const STRING_BUFFER* sbuf);
+t_buf_pos string_buff_size(const STRING_BUFFER* sbuf);
 
 //
 // Resizing
@@ -88,9 +88,9 @@ void string_buff_shrink(STRING_BUFFER *sbuf, const t_buf_pos new_len);
 //
 
 // get/set chars
-inline char string_buff_get_char(const STRING_BUFFER *sbuf,
+char string_buff_get_char(const STRING_BUFFER *sbuf,
                                  const t_buf_pos index);
-inline void string_buff_set_char(STRING_BUFFER *sbuf, const t_buf_pos index,
+void string_buff_set_char(STRING_BUFFER *sbuf, const t_buf_pos index,
                                  const char c);
 
 // Add a character to the end of this STRING_BUFFER

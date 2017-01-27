@@ -36,7 +36,7 @@ typedef SCORE_TYPE score_t;
 enum Matrix { MATCH,GAP_A,GAP_B };
 
 // Printing colour codes
-char *align_col_mismatch, *align_col_indel, *align_col_context, *align_col_stop;
+extern char *align_col_mismatch, *align_col_indel, *align_col_context, *align_col_stop;
 
 // Methods
 void alignment_print_matrices(score_t* match_score, score_t* gap_a_score,

@@ -3,7 +3,7 @@ LIBS_PATH=./libs
 ifdef DEBUG
 	FLAGS=-DDEBUG=1 --debug
 else
-	FLAGS=-O3 -std=c14
+	FLAGS=-O3 -std=c11
 endif
 
 UTILITY_LIB_PATH := $(LIBS_PATH)/utility_lib

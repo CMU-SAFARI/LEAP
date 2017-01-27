@@ -126,20 +126,20 @@ char* string_buff_as_str(const STRING_BUFFER* sbuf)
 }
 
 // Get string length
-inline t_buf_pos string_buff_strlen(const STRING_BUFFER* sbuf)
+t_buf_pos string_buff_strlen(const STRING_BUFFER* sbuf)
 {
   return sbuf->len;
 }
 
 // Get buffer length
-inline t_buf_pos string_buff_size(const STRING_BUFFER* sbuf)
+t_buf_pos string_buff_size(const STRING_BUFFER* sbuf)
 {
   return sbuf->size;
 }
 
 // Get / set characters
 
-inline char string_buff_get_char(const STRING_BUFFER *sbuf,
+char string_buff_get_char(const STRING_BUFFER *sbuf,
                                  const t_buf_pos index)
 {
   // Bounds checking
@@ -155,7 +155,7 @@ inline char string_buff_get_char(const STRING_BUFFER *sbuf,
   return sbuf->buff[index];
 }
 
-inline void string_buff_set_char(STRING_BUFFER *sbuf, const t_buf_pos index,
+void string_buff_set_char(STRING_BUFFER *sbuf, const t_buf_pos index,
                                  const char c)
 {
   // Bounds checking

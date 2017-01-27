@@ -6,8 +6,18 @@ LD = ld
 
 LDFLAGS = -r
 
+NW_PATH = ./needleman_wunsch-0.3.5
+LIBS_PATH = $(NW_PATH)/libs
+UTILITY_LIB_PATH := $(LIBS_PATH)/utility_lib
+STRING_BUF_PATH := $(LIBS_PATH)/string_buffer
+BIOINF_LIB_PATH := $(LIBS_PATH)/bioinf
+SCORING_PATH := $(LIBS_PATH)/alignment_scoring
+
 #CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug
-CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I .
+CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I . -I $(UTILITY_LIB_PATH) \
+         -I $(STRING_BUF_PATH) -I $(BIOINF_LIB_PATH) -I $(SCORING_PATH) \
+         -I $(NW_PATH) -DCOMPILE_TIME='"$(shell date)"' -DSCORE_TYPE='int' \
+         -fpermissive
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 endif
@@ -61,8 +71,11 @@ countPassFilter: mask.o print.o bit_convert.o popcount.o vector_filter.o countPa
 timeSSE: timeSSE.c
 	$(CXX) $(CFLAGS) $< -o $@
 
-vectorED: SIMD_ED.o print.o bit_convert.o vectorED.cc shift.o SHD.o mask.o popcount.o
-	$(CXX) $(CFLAGS) $^ -o $@
+needleman_wunsch.o: $(NW_PATH)/needleman_wunsch.c $(NW_PATH)/needleman_wunsch.h 
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+vectorED: SIMD_ED.o print.o bit_convert.o vectorED.cc shift.o SHD.o mask.o popcount.o needleman_wunsch.o $(wildcard $(SCORING_PATH)/*.c) $(UTILITY_LIB_PATH)/utility_lib.c $(BIOINF_LIB_PATH)/bioinf.c $(STRING_BUF_PATH)/string_buffer.c
+	$(CXX) $(CFLAGS) $^ -o $@ -lz 
 
 vectorLV: LV.o vectorLV.cc
 	$(CXX) $(CFLAGS) $^ -o $@
@@ -90,4 +103,4 @@ testRefDB: RefDB.o bit_convert.o shift.o print.o RefDBMain.cc
 .PHONY : clean
 
 clean:
-	rm $(EXECUTABLE) *.o
+	rm -f $(EXECUTABLE) *.o

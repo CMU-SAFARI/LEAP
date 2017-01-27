@@ -65,8 +65,8 @@ int nw_alloc_mem(const char* seq_a, const char* seq_b,
 char nw_realloc_mem(unsigned int length, char** alignment_a, char** alignment_b)
 {
   // longest_alignment + 1 to allow for \0
-  char* temp_a = realloc(*alignment_a, (length+1) * sizeof(char));
-  char* temp_b = realloc(*alignment_b, (length+1) * sizeof(char));
+  char* temp_a = (char*)realloc(*alignment_a, (length+1) * sizeof(char));
+  char* temp_b = (char*)realloc(*alignment_b, (length+1) * sizeof(char));
 
   if(temp_a != NULL)
   {

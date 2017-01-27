@@ -45,6 +45,8 @@ struct SEQ_FILE
   enum SEQ_FILE_TYPE file_type;
 };
 
+STRING_BUFFER*** chrom_names_global; 
+
 void _set_seq_filetype(SEQ_FILE* file)
 {
   int first_char;
@@ -573,6 +575,16 @@ long load_fasta_file(const char* ref_genome_file,
 }
 
 
+// define sort compare function
+//  - sort by string ordering of chromosome names
+int cmp_chroms(const void *a, const void *b)
+{
+    const int *ia = (const int *) a;
+    const int *ib = (const int *) b;
+
+    return strcmp(((*chrom_names_global)[*ia])->buff, ((*chrom_names_global)[*ib])->buff);
+}
+
 // Sort chromosome list by chromosome names
 void sort_chroms(STRING_BUFFER*** chrom_names,
                  STRING_BUFFER*** chrom_seqs,
@@ -588,17 +600,9 @@ void sort_chroms(STRING_BUFFER*** chrom_names,
     chroms_order[i] = i;
   }
   
-  // define sort compare function
-  //  - sort by string ordering of chromosome names
-  int cmp_chroms(const void *a, const void *b)
-  {
-    const int *ia = (const int *) a;
-    const int *ib = (const int *) b;
-    
-    return strcmp(((*chrom_names)[*ia])->buff, ((*chrom_names)[*ib])->buff);
-  }
-  
+  chrom_names_global = chrom_names; 
   qsort(chroms_order, num_of_chroms, sizeof(int), cmp_chroms);
+
   
   /* // Debug: print chromosome's order
   printf("%i", chroms_order[0]);
