@@ -86,7 +86,6 @@ int main(int argc, char* argv[]) {
 		//clear past result
 //		strncpy(read, init_all_NULL, 128);
 //		strncpy(ref, init_all_NULL, 128);
-		
 		for (read_size = 0; read_size < BATCH_RUN; read_size++) {
 			
 			//get read
@@ -96,7 +95,7 @@ int main(int argc, char* argv[]) {
 			//Get rid of the new line character
 			tempstr[length] = '\0';
 			
-			if (strcmp(tempstr, "end_of_file\0") == 0) {
+			if (strcmp(tempstr, "end_of_file\0") == 0 || strcmp(tempstr, "eof\0") == 0) {
 				stop = true;
 				break;
 			}

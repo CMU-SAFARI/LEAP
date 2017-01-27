@@ -28,7 +28,7 @@ INC = -I..
 GCC_PREFIX = $(shell dirname `which gcc`)
 GCC_SUFFIX =
 CC ?= $(GCC_PREFIX)/gcc$(GCC_SUFFIX)
-CPP ?= $(GCC_PREFIX)/g++$(GCC_SUFFIX)
+CPP ?= $(GCC_PREFIX)/g++$(GCC_SUFFIX) 
 CXX ?= $(CPP)
 HEADERS = $(wildcard *.h)
 BOWTIE_MM = 1
@@ -182,7 +182,7 @@ ifeq (32,$(BITS))
   $(error bowtie2 compilation requires a 64-bit platform )
 endif
 
-SSE_FLAG=-mbmi -mavx2 -msse4.2
+SSE_FLAG=--std=c++11 -mbmi -mavx2 -msse4.2
 
 DEBUG_FLAGS    = -O0 -g3 -m64 $(SSE_FLAG)
 DEBUG_DEFS     = -DCOMPILER_OPTIONS="\"$(DEBUG_FLAGS) $(EXTRA_FLAGS)\""
