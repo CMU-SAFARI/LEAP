@@ -86,6 +86,7 @@ int main(int argc, char* argv[]) {
 		//clear past result
 //		strncpy(read, init_all_NULL, 128);
 //		strncpy(ref, init_all_NULL, 128);
+		
 		for (read_size = 0; read_size < BATCH_RUN; read_size++) {
 			
 			//get read
@@ -95,7 +96,7 @@ int main(int argc, char* argv[]) {
 			//Get rid of the new line character
 			tempstr[length] = '\0';
 			
-			if (strcmp(tempstr, "end_of_file\0") == 0 || strcmp(tempstr, "eof\0") == 0) {
+			if (strcmp(tempstr, "end_of_file\0") == 0) {
 				stop = true;
 				break;
 			}
@@ -130,9 +131,9 @@ int main(int argc, char* argv[]) {
 			ed_obj.reset();
 			ed_obj.run();
 			if (ed_obj.check_pass() ) {
-				cout << "read_idx" << read_idx << endl;
-				ed_obj.backtrack();
-				fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+				//cout << "read_idx" << read_idx << endl;
+				//ed_obj.backtrack();
+				//fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
 				valid_buff[read_idx] = true;
 			}
 /*
