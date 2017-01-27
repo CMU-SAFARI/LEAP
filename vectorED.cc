@@ -14,7 +14,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h> 
 #include "SIMD_ED.h"
+#include "string_buffer.h" 
+#include "needleman_wunsch.h" 
+#include "nw_cmdline.h" 
 
 #define BATCH_RUN 1000000 
 #ifndef _MAX_LENGTH_ 
@@ -27,6 +31,8 @@ using namespace std;
 //char ref[128];
 
 char init_all_NULL[128] = "";
+extern char *alignment_a, *alignment_b; 
+extern t_buf_pos alignment_max_length; 
 
 //char read_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 //char ref_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -51,13 +57,18 @@ int main(int argc, char* argv[]) {
 		ref1[i] = new uint8_t[_MAX_LENGTH_ / 8];
 	}
 */
-
-	if (argc != 2) {
-		printf("Usage: $>bin error\n");
+    char* seq1 = NULL, *seq2 = NULL; 
+    int algo_choose = 0; // default skipED 
+	if (argc < 2) {
+		printf("Usage: $>bin error [NW(1) or skipED(0)]\n");
 		exit(1);
 	}
 
 	int error = atoi(argv[1]);
+    if (argc > 2) { 
+        algo_choose = atoi(argv[2]); 
+    }
+    // ignore rest of arguments if existant 
 
 	size_t lineLength;	
 	char* tempstr = NULL;
@@ -124,16 +135,26 @@ int main(int argc, char* argv[]) {
 		for (read_idx = 0; read_idx < read_size; read_idx++) {
 			
 			int length = read_strs[read_idx].length();
-			ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length);
-			//ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length[read_idx]);
-			ed_obj.calculate_masks();
-			ed_obj.reset();
-			ed_obj.run();
-			if (ed_obj.check_pass() ) {
-				ed_obj.backtrack();
-				fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
-				valid_buff[read_idx] = true;
-			}
+            // do the skipED affine. 
+            if (algo_choose == 0) { 
+                ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length);
+                //ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length[read_idx]);
+                ed_obj.calculate_masks();
+                ed_obj.reset();
+                ed_obj.run();
+                if (ed_obj.check_pass() ) {
+                    ed_obj.backtrack();
+                    fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+                    valid_buff[read_idx] = true;
+                }
+            }
+            // do the Needleman-Wunsch Affine ED 
+            else if (algo_choose == 1) {
+                seq1 = (char*)read_strs[read_idx].c_str(); 
+                seq2 = (char*)ref_strs[read_idx].c_str();
+                alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
+                align(seq1, seq2, NULL, NULL); 
+            }
 /*
 			else {
 				fprintf(stdout, "error!\n");
