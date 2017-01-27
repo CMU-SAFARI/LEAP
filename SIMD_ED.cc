@@ -524,13 +524,15 @@ void SIMD_ED::run_affine() {
 #ifdef debug	
 				cout << "Update I[" << l << "][" << e << "] from ext from I[" << l-1 << "][" << e-gap_ext_penalty << "]" << I_pos[l-1][e-gap_ext_penalty] << endl;
 #endif
-			I_pos[l][e] = I_pos[l-1][e-gap_ext_penalty] + top_offset;
+				I_pos[l][e] = I_pos[l-1][e-gap_ext_penalty] + top_offset;
 			}
 
 			if (e >= gap_open_penalty && end[l+1][e-gap_open_penalty] >= 0 && end[l+1][e-gap_open_penalty] > D_pos[l+1][e-gap_ext_penalty])
 				D_pos[l][e] = end[l+1][e-gap_open_penalty] + bot_offset;
 			else if (e >= gap_ext_penalty && D_pos[l+1][e-gap_ext_penalty] >= 0)
 				D_pos[l][e] = D_pos[l+1][e-gap_ext_penalty] + bot_offset;
+
+			start[l][e] = -2;
 
 			if (e >= ms_penalty && end[l][e-ms_penalty] >= 0) {
 				start[l][e] = end[l][e-ms_penalty] + 1;

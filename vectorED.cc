@@ -131,6 +131,7 @@ int main(int argc, char* argv[]) {
 			ed_obj.reset();
 			ed_obj.run();
 			if (ed_obj.check_pass() ) {
+				cout << "read_idx" << read_idx << endl;
 				ed_obj.backtrack();
 				fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
 				valid_buff[read_idx] = true;
