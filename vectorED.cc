@@ -33,7 +33,7 @@ using namespace std;
 char init_all_NULL[128] = "";
 extern char *alignment_a, *alignment_b; 
 extern t_buf_pos alignment_max_length; 
-extern SCORING_SYSTEM* scoring; 
+//extern SCORING_SYSTEM* scoring; 
 
 //char read_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 //char ref_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -59,7 +59,6 @@ int main(int argc, char* argv[]) {
 	}
 */
     char* seq1 = NULL, *seq2 = NULL; 
-    set_default_scoring(); 
     int algo_choose = 0; // default skipED 
 	if (argc < 2) {
 		printf("Usage: $>bin error [NW(1) or skipED(0)]\n");
@@ -69,6 +68,9 @@ int main(int argc, char* argv[]) {
 	int error = atoi(argv[1]);
     if (argc > 2) { 
         algo_choose = atoi(argv[2]); 
+    }
+    if (algo_choose) {
+        set_default_scoring(); 
     }
     // ignore rest of arguments if existant 
 
