@@ -33,6 +33,7 @@ using namespace std;
 char init_all_NULL[128] = "";
 extern char *alignment_a, *alignment_b; 
 extern t_buf_pos alignment_max_length; 
+extern SCORING_SYSTEM* scoring; 
 
 //char read_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 //char ref_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -58,6 +59,7 @@ int main(int argc, char* argv[]) {
 	}
 */
     char* seq1 = NULL, *seq2 = NULL; 
+    set_default_scoring(); 
     int algo_choose = 0; // default skipED 
 	if (argc < 2) {
 		printf("Usage: $>bin error [NW(1) or skipED(0)]\n");
@@ -135,9 +137,9 @@ int main(int argc, char* argv[]) {
 
 		for (read_idx = 0; read_idx < read_size; read_idx++) {
 			
-			int length = read_strs[read_idx].length();
             // do the skipED affine. 
             if (algo_choose == 0) { 
+                int length = read_strs[read_idx].length();
                 ed_obj.load_reads((char*) read_strs[read_idx].c_str(), (char*) ref_strs[read_idx].c_str(), length);
                 //ed_obj.load_reads(read0[read_idx], read1[read_idx], ref0[read_idx], ref1[read_idx], length[read_idx]);
                 ed_obj.calculate_masks();
@@ -154,8 +156,11 @@ int main(int argc, char* argv[]) {
             else if (algo_choose == 1) {
                 seq1 = (char*)read_strs[read_idx].c_str(); 
                 seq2 = (char*)ref_strs[read_idx].c_str();
+                //printf("seq: %s seq2: %s\n", seq1, seq2); 
                 alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
+                //printf("alignement_max_length: %llu\n", alignment_max_length); 
                 align(seq1, seq2, NULL, NULL); 
+                //printf("align\n"); 
             }
 /*
 			else {
