@@ -583,7 +583,7 @@ void SIMD_ED::run_affine() {
 			break;
 	}
 
-	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
+	if (final_lane_idx != mid_lane && (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN)) {
 		int lane_diff = abs(final_lane_idx - mid_lane);
 		converge_ED = final_ED + gap_open_penalty + (lane_diff - 1)	* gap_ext_penalty;
 		ED_pass = converge_ED <= af_threshold;
