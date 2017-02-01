@@ -154,6 +154,7 @@ int main(int argc, char* argv[]) {
                     //ed_obj.backtrack();
                     //fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
                     valid_buff[read_idx] = true;
+                    //printf("read_num:%u\n%s\n%s\n", read_idx, (char*)read_strs[read_idx].c_str(), (char*)ref_strs[read_idx].c_str()); 
                 }
                 else { 
                     //printf("fail read_num:%u\n", read_idx); 
@@ -172,6 +173,9 @@ int main(int argc, char* argv[]) {
                 if (tmp) { 
                     valid_buff[read_idx] = true; 
                     //printf("read_num:%u\n%s\n%s\n", read_idx, seq1, seq2); 
+                }
+                else { 
+                    //printf("fail read_num:%u\n", read_idx); 
                 }
             }
 /*
