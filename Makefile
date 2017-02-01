@@ -13,9 +13,9 @@ STRING_BUF_PATH := $(LIBS_PATH)/string_buffer
 BIOINF_LIB_PATH := $(LIBS_PATH)/bioinf
 SCORING_PATH := $(LIBS_PATH)/alignment_scoring
 
-#CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I . \
+#CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug \
 
-CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug \
+CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I . \
          -I $(UTILITY_LIB_PATH) \
          -I $(STRING_BUF_PATH) -I $(BIOINF_LIB_PATH) -I $(SCORING_PATH) \
          -I $(NW_PATH) -DCOMPILE_TIME='"$(shell date)"' -DSCORE_TYPE='int' \

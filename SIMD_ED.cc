@@ -576,10 +576,11 @@ void SIMD_ED::run_affine() {
 						int temp_converge_ED = e;
 						if (lane_diff != 0)
 							temp_converge_ED += gap_open_penalty + (lane_diff - 1)	* gap_ext_penalty;
-						if (temp_converge_ED > af_threshold && temp_converge_ED < converge_ED) {
+						if (temp_converge_ED <= af_threshold && temp_converge_ED < converge_ED) {
 							final_lane_idx = l;
 							final_ED = e;
 							ED_pass = true;
+							converge_ED = temp_converge_ED;
 						}
 					}
 					else {
