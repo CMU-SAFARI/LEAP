@@ -465,6 +465,7 @@ void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, in
 
 void SIMD_ED::reset_affine() {
 	ED_pass = false;
+	final_lane_idx = -1;
 }
 
 void SIMD_ED::run_affine() {
@@ -570,11 +571,10 @@ void SIMD_ED::run_affine() {
 #endif
 
 				if (end[l][e] == buffer_length) {
-					final_lane_idx = l;
+					if (abs(mid_lane - l) < abs(mid_lane - final_lane_idx) )
+						final_lane_idx = l;
 					final_ED = e;
 					ED_pass = true;
-					
-					break;
 				}
 			}
 		}
