@@ -249,7 +249,7 @@ int align(char *seq_a, char *seq_b,
     printf("score: %i\n", score);
   }
     //printf("score: %i\n", score);
-  if (score < -12) {
+  if (score <= -12) {
     return 0; 
   }
   return 1; 
