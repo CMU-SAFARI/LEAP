@@ -80,7 +80,7 @@ vectorED: SIMD_ED.o print.o bit_convert.o vectorED.cc shift.o SHD.o mask.o popco
 	$(CXX) $(CFLAGS) $^ -o $@ -lz 
 
 testNW: SIMD_ED.o print.o bit_convert.o testNW.cc shift.o SHD.o mask.o popcount.o needleman_wunsch.o $(wildcard $(SCORING_PATH)/*.c) $(UTILITY_LIB_PATH)/utility_lib.c $(BIOINF_LIB_PATH)/bioinf.c $(STRING_BUF_PATH)/string_buffer.c $(NW_PATH)/nw_cmdline.c 
-	$(CXX) $(CFLAGS) $^ -o $@ -lz 
+	$(CXX) $(CFLAGS) $^ -o $@ -lz -lparasail
 
 vectorLV: LV.o vectorLV.cc
 	$(CXX) $(CFLAGS) $^ -o $@

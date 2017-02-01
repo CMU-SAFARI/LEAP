@@ -175,9 +175,19 @@ int main(int argc, char* argv[]) {
             }
 
             else if (algo_choose == 2) { 
-                seq1 = (char*)read_strs[read_idx].c_str(); 
-                seq2 = (char*)ref_strs[read_idx].c_str();
+                seq1 = (const char*)read_strs[read_idx].c_str(); 
+                seq2 = (const char*)ref_strs[read_idx].c_str();
+                const parasail_matrix_t *user_matrix = parasail_matrix_create("ACGT", 0, -2); 
+                parasail_result_t* parasail_result; 
+                parasail_result = parasail_nw_striped_sse41_128_16(seq1, (const int)read_strs[read_idx].length(), 
+                                                                   seq2, (const int)ref_strs[read_idx].length(),
+                                                                   -3, -1, user_matrix); 
                 
+                if (parasail_result->score < -12) {
+                    valid_buff[read_idx] = true; 
+                }
+                printf("%d ", parasail_result->score); 
+                parasail_result_free(parasail_result); 
             }
 /*
 			else {
