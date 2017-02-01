@@ -95,7 +95,6 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
-    int af_threshold1 = error * 2; 
 	//ed_obj.init_levenshtein(error, ED_GLOBAL, false);
 	ed_obj.init_affine(error, error * 2, ED_GLOBAL, 2, 3, 1);
 
@@ -113,7 +112,7 @@ int main(int argc, char* argv[]) {
 			//Get rid of the new line character
 			tempstr[length] = '\0';
 			
-			if (strcmp(tempstr, "end_of_file\0") == 0 || strcmp(tempstr, "eof\0") == 0) {
+			if (strcmp(tempstr, "end_of_file\0") == 0) {
 				stop = true;
 				break;
 			}
@@ -173,6 +172,12 @@ int main(int argc, char* argv[]) {
                     valid_buff[read_idx] = true; 
                     //printf("read_num:%u\n%s\n%s\n", read_idx, seq1, seq2); 
                 }
+            }
+
+            else if (algo_choose == 2) { 
+                seq1 = (char*)read_strs[read_idx].c_str(); 
+                seq2 = (char*)ref_strs[read_idx].c_str();
+                
             }
 /*
 			else {

@@ -381,10 +381,10 @@ SCORING_SYSTEM* scoring_system_DNA_hybridization()
 // Default
 SCORING_SYSTEM* scoring_system_default()
 {
-  int match_default = 1;
-  int mismatch_default = -2;
-  int gap_open_default = -4;
-  int gap_extend_default = -1;
+  int match_default = 0; //1;
+  int mismatch_default = -2; // -2;
+  int gap_open_default = -3; // -4;
+  int gap_extend_default = -1; // -1;
 
   // no_start_gap_penalty, no_end_gap_penalty = 0
   // case_sensitive = 0

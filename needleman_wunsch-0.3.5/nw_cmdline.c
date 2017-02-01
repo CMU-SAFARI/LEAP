@@ -187,12 +187,13 @@ void align_zam(char *seq_a, char *seq_b)
   printf("%i %i\n\n", num_of_mismatches, num_of_indels);
 }
 
-void align(char *seq_a, char *seq_b,
+int align(char *seq_a, char *seq_b,
            char *seq_a_name, char *seq_b_name)
 {
   if(print_zam)
   {
-    return align_zam(seq_a, seq_b);
+    align_zam(seq_a, seq_b);
+    return 0; 
   }
 
   int score = needleman_wunsch(seq_a, seq_b, alignment_a, alignment_b, scoring);
@@ -247,6 +248,11 @@ void align(char *seq_a, char *seq_b,
   {
     printf("score: %i\n", score);
   }
+    //printf("score: %i\n", score);
+  if (score < -12) {
+    return 0; 
+  }
+  return 1; 
   
   //printf("\n");
 }
