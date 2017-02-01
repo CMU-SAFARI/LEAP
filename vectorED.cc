@@ -19,6 +19,7 @@
 #include "string_buffer.h" 
 #include "needleman_wunsch.h" 
 #include "nw_cmdline.h" 
+#include "parasail.h" 
 
 #define BATCH_RUN 1000000 
 #ifndef _MAX_LENGTH_ 
@@ -94,6 +95,7 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
+    int af_threshold1 = error * 2; 
 	//ed_obj.init_levenshtein(error, ED_GLOBAL, false);
 	ed_obj.init_affine(error, error * 2, ED_GLOBAL, 2, 3, 1);
 
@@ -111,7 +113,7 @@ int main(int argc, char* argv[]) {
 			//Get rid of the new line character
 			tempstr[length] = '\0';
 			
-			if (strcmp(tempstr, "end_of_file\0") == 0) {
+			if (strcmp(tempstr, "end_of_file\0") == 0 || strcmp(tempstr, "eof\0") == 0) {
 				stop = true;
 				break;
 			}

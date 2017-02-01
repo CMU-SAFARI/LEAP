@@ -492,7 +492,7 @@ void SIMD_ED::run_affine() {
 				final_lane_idx = l;
 				final_ED = 0;
 				ED_pass = true;
-				return;
+				//return;
 			}
 		}
 	}
@@ -580,13 +580,15 @@ void SIMD_ED::run_affine() {
 		}
 
 		if (ED_pass)
-			break;
+	    	break;
 	}
 
 	if (final_lane_idx != mid_lane && (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN)) {
 		int lane_diff = abs(final_lane_idx - mid_lane);
 		converge_ED = final_ED + gap_open_penalty + (lane_diff - 1)	* gap_ext_penalty;
 		ED_pass = converge_ED <= af_threshold;
+        printf("converge_ed: %d ", converge_ED); 
+        printf("final_ed: %d ", final_ED); 
 	}
 }
 
