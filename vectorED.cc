@@ -16,9 +16,10 @@
 #include <string.h>
 #include <stddef.h> 
 #include "SIMD_ED.h"
-//#include "string_buffer.h" 
-//#include "needleman_wunsch.h" 
-//#include "nw_cmdline.h" 
+#include "string_buffer.h" 
+#include "needleman_wunsch.h" 
+#include "nw_cmdline.h" 
+#include "parasail.h" 
 
 #define BATCH_RUN 1000000 
 #ifndef _MAX_LENGTH_ 
@@ -32,7 +33,7 @@ using namespace std;
 
 char init_all_NULL[128] = "";
 extern char *alignment_a, *alignment_b; 
-//extern t_buf_pos alignment_max_length; 
+extern t_buf_pos alignment_max_length; 
 //extern SCORING_SYSTEM* scoring; 
 
 //char read_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -70,7 +71,7 @@ int main(int argc, char* argv[]) {
         algo_choose = atoi(argv[2]); 
     }
     if (algo_choose) {
-        //set_default_scoring(); 
+        set_default_scoring(); 
     }
     // ignore rest of arguments if existant 
 
@@ -94,6 +95,7 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
+    int af_threshold1 = error * 2; 
 	//ed_obj.init_levenshtein(error, ED_GLOBAL, false);
 	ed_obj.init_affine(error, error * 2, ED_GLOBAL, 2, 3, 1);
 
@@ -111,7 +113,7 @@ int main(int argc, char* argv[]) {
 			//Get rid of the new line character
 			tempstr[length] = '\0';
 			
-			if (strcmp(tempstr, "end_of_file\0") == 0) {
+			if (strcmp(tempstr, "end_of_file\0") == 0 || strcmp(tempstr, "eof\0") == 0) {
 				stop = true;
 				break;
 			}
@@ -153,16 +155,24 @@ int main(int argc, char* argv[]) {
                     //fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
                     valid_buff[read_idx] = true;
                 }
+                else { 
+                    //printf("fail read_num:%u\n", read_idx); 
+                }
             }
             // do the Needleman-Wunsch Affine ED 
             else if (algo_choose == 1) {
                 seq1 = (char*)read_strs[read_idx].c_str(); 
                 seq2 = (char*)ref_strs[read_idx].c_str();
+                //printf("read_num:%u Before\n%s\n%s\n", read_idx, seq1, seq2); 
                 //printf("seq: %s seq2: %s\n", seq1, seq2); 
-                //alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
+                alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
                 //printf("alignement_max_length: %llu\n", alignment_max_length); 
-                //align(seq1, seq2, NULL, NULL); 
+                int tmp = align(seq1, seq2, NULL, NULL); 
                 //printf("align\n"); 
+                if (tmp) { 
+                    valid_buff[read_idx] = true; 
+                    //printf("read_num:%u\n%s\n%s\n", read_idx, seq1, seq2); 
+                }
             }
 /*
 			else {
