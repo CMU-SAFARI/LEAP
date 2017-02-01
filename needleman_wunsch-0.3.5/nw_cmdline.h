@@ -56,7 +56,7 @@ void print_usage(char* err_fmt, ...);
 
 void align_zam(char *seq_a, char *seq_b); 
 
-void align(char *seq_a, char *seq_b,
+int align(char *seq_a, char *seq_b,
            char *seq_a_name, char *seq_b_name); 
 
 // If seq2 is NULL, read pair of entries from first file

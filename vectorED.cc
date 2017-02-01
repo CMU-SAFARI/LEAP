@@ -153,16 +153,24 @@ int main(int argc, char* argv[]) {
                     //fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
                     valid_buff[read_idx] = true;
                 }
+                else { 
+                    //printf("fail read_num:%u\n", read_idx); 
+                }
             }
             // do the Needleman-Wunsch Affine ED 
             else if (algo_choose == 1) {
                 seq1 = (char*)read_strs[read_idx].c_str(); 
                 seq2 = (char*)ref_strs[read_idx].c_str();
+                //printf("read_num:%u Before\n%s\n%s\n", read_idx, seq1, seq2); 
                 //printf("seq: %s seq2: %s\n", seq1, seq2); 
                 alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
                 //printf("alignement_max_length: %llu\n", alignment_max_length); 
-                align(seq1, seq2, NULL, NULL); 
+                int tmp = align(seq1, seq2, NULL, NULL); 
                 //printf("align\n"); 
+                if (tmp) { 
+                    valid_buff[read_idx] = true; 
+                    //printf("read_num:%u\n%s\n%s\n", read_idx, seq1, seq2); 
+                }
             }
 /*
 			else {
