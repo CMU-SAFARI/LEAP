@@ -465,7 +465,7 @@ void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, in
 
 void SIMD_ED::reset_affine() {
 	ED_pass = false;
-	final_lane_idx = -1;
+	converge_ED = 1000000;
 }
 
 void SIMD_ED::run_affine() {
@@ -493,7 +493,7 @@ void SIMD_ED::run_affine() {
 				final_lane_idx = l;
 				final_ED = 0;
 				ED_pass = true;
-				//return;
+				return;
 			}
 		}
 	}
@@ -571,25 +571,30 @@ void SIMD_ED::run_affine() {
 #endif
 
 				if (end[l][e] == buffer_length) {
-					if (abs(mid_lane - l) < abs(mid_lane - final_lane_idx) )
+					if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
+						int lane_diff = abs(mid_lane - l);
+						int temp_converge_ED = e;
+						if (lane_diff != 0)
+							temp_converge_ED += gap_open_penalty + (lane_diff - 1)	* gap_ext_penalty;
+						if (temp_converge_ED > af_threshold && temp_converge_ED < converge_ED) {
+							final_lane_idx = l;
+							final_ED = e;
+							ED_pass = true;
+						}
+					}
+					else {
 						final_lane_idx = l;
-					final_ED = e;
-					ED_pass = true;
+						final_ED = e;
+						ED_pass = true;
+					}
 				}
 			}
 		}
 
 		if (ED_pass)
-	    	break;
+			break;
 	}
 
-	if (final_lane_idx != mid_lane && (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN)) {
-		int lane_diff = abs(final_lane_idx - mid_lane);
-		converge_ED = final_ED + gap_open_penalty + (lane_diff - 1)	* gap_ext_penalty;
-		ED_pass = converge_ED <= af_threshold;
-        printf("converge_ed: %d ", converge_ED); 
-        printf("final_ed: %d ", final_ED); 
-	}
 }
 
 void SIMD_ED::backtrack_affine() {
