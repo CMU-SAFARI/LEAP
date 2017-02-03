@@ -27,13 +27,15 @@
 #endif
 
 using namespace std;
+extern nw_aligner_t *nw;
+
 
 //char read[128];
 //char ref[128];
 
 char init_all_NULL[128] = "";
 extern char *alignment_a, *alignment_b; 
-extern t_buf_pos alignment_max_length; 
+//extern t_buf_pos alignment_max_length; 
 //extern SCORING_SYSTEM* scoring; 
 
 //char read_t[128] __aligned__;// = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -70,9 +72,9 @@ int main(int argc, char* argv[]) {
     if (argc > 2) { 
         algo_choose = atoi(argv[2]); 
     }
-    if (algo_choose) {
-        set_default_scoring(); 
-    }
+    //if (algo_choose) {
+    //    set_default_scoring(); 
+    //}
     // ignore rest of arguments if existant 
 
 	size_t lineLength;	
@@ -164,14 +166,18 @@ int main(int argc, char* argv[]) {
                 seq2 = (char*)ref_strs[read_idx].c_str();
                 //printf("read_num:%u Before\n%s\n%s\n", read_idx, seq1, seq2); 
                 //printf("seq: %s seq2: %s\n", seq1, seq2); 
-                alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
+
+                //alignment_max_length = nw_alloc_mem(seq1, seq2, &alignment_a, &alignment_b); 
+                nw = needleman_wunsch_new(); 
+                align((const char*)seq1, (const char*)seq2, NULL, NULL); 
+                needleman_wunsch_free(nw); 
                 //printf("alignement_max_length: %llu\n", alignment_max_length); 
-                int tmp = align(seq1, seq2, NULL, NULL); 
+                //int tmp = align(seq1, seq2, NULL, NULL); 
                 //printf("align\n"); 
-                if (tmp) { 
-                    valid_buff[read_idx] = true; 
-                    //printf("read_num:%u\n%s\n%s\n", read_idx, seq1, seq2); 
-                }
+                //if (tmp) { 
+                //    valid_buff[read_idx] = true; 
+                //    //printf("read_num:%u\n%s\n%s\n", read_idx, seq1, seq2); 
+                //}
             }
 
             else if (algo_choose == 2) { 
