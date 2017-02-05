@@ -1,0 +1,116 @@
+L PAIRS LEVENSHTEIN
+testLV
+1
+passNum:	9902
+totalNum:	17532404
+total_time: 2.310000
+2
+passNum:	115376
+totalNum:	17532404
+total_time: 3.780000
+3
+passNum:	208271
+totalNum:	17532404
+total_time: 5.810000
+4
+passNum:	319386
+totalNum:	17532404
+total_time: 8.180000
+5
+passNum:	430904
+totalNum:	17532404
+total_time: 10.920000
+BV LEAP
+1
+passNum:	392925
+totalNum:	17532404
+total_time: 1.480000
+2
+passNum:	13533126
+totalNum:	17532404
+total_time: 2.700000
+3
+passNum:	15644740
+totalNum:	17532404
+total_time: 4.140000
+4
+passNum:	16447964
+totalNum:	17532404
+total_time: 5.960000
+5
+passNum:	17532404
+totalNum:	17532404
+total_time: 7.990000
+VectorLV
+1
+passNum:	9902
+totalNum:	17532404
+total_time: 1.780000
+2
+passNum:	115376
+totalNum:	17532404
+total_time: 2.770000
+3
+passNum:	208271
+totalNum:	17532404
+total_time: 4.020000
+4
+passNum:	319386
+totalNum:	17532404
+total_time: 5.610000
+5
+passNum:	430904
+totalNum:	17532404
+total_time: 7.510000
+NW 1 across 1
+1
+passNum:	498318
+totalNum:	17532404
+total_time: 19.510000
+NW 2 across 1
+1
+passNum:	17532404
+totalNum:	17532404
+total_time: 67.600000
+seqan
+1
+align_num: 8342
+total_num: 17532840
+total_time: 10.200000
+2
+align_num: 113811
+total_num: 17532830
+total_time: 10.870000
+3
+align_num: 206297
+total_num: 17532825
+total_time: 11.440000
+4
+align_num: 318430
+total_num: 17532816
+total_time: 12.160000
+5
+align_num: 441655
+total_num: 17532799
+total_time: 13.560000
+BV LEAP SHD ON
+1
+passNum:	6089
+totalNum:	17532404
+total_time: 1.520000
+2
+passNum:	1405606
+totalNum:	17532404
+total_time: 2.550000
+3
+passNum:	5206821
+totalNum:	17532404
+total_time: 4.250000
+4
+passNum:	10428777
+totalNum:	17532404
+total_time: 6.620000
+5
+passNum:	17532404
+totalNum:	17532404
+total_time: 10.470000

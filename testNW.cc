@@ -167,6 +167,9 @@ int main(int argc, char* argv[]) {
                     //cout << "read_idx" << read_idx << endl;
                     //ed_obj.backtrack();
                     //fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+
+                    //fprintf(stdout, "%.*s\n", 128, read_strs[read_idx].c_str() );
+                    //fprintf(stdout, "%.*s\n", 128, ref_strs[read_idx].c_str() );
                     valid_buff[read_idx] = true;
                 }
                 else {
