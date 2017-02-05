@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 
     SIMD_ED ed_obj;
     //ed_obj.init_levenshtein(error, ED_GLOBAL, false);
-    ed_obj.init_affine(error, error * 2, ED_GLOBAL, 2, 3, 1);
+    ed_obj.init_affine(error, error * 3, ED_GLOBAL, 2, 3, 1);
 
     do {
         //clear past result
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
                 if (parasail_result->score >= -12) {
                     valid_buff[read_idx] = true;
                 }
-                printf("%d ", parasail_result->score);
+                //printf("%d ", parasail_result->score);
                 parasail_result_free(parasail_result);
             }
 
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
                 if (parasail_result->score >= -12) {
                     valid_buff[read_idx] = true;
                 }
-                printf("%d ", parasail_result->score);
+                //printf("%d ", parasail_result->score);
                 parasail_result_free(parasail_result);
             }
 
@@ -241,8 +241,8 @@ int main(int argc, char* argv[]) {
         for (read_idx = 0; read_idx < read_size; read_idx++) {
 
             if (valid_buff[read_idx]) {
-                fprintf(stderr, "%.*s\n", 128, read_strs[read_idx].c_str() );
-                fprintf(stderr, "%.*s\n", 128, ref_strs[read_idx].c_str() );
+                //fprintf(stderr, "%.*s\n", 128, read_strs[read_idx].c_str() );
+                //fprintf(stderr, "%.*s\n", 128, ref_strs[read_idx].c_str() );
                 passNum++;
             }
             totalNum++;

@@ -1,0 +1,110 @@
+# NW 1 and 2 are for BAG
+# rest are for levenstein
+
+
+
+NW 1 across 1..5
+1
+passNum:	25080532
+totalNum:	25080543
+total_time: 515.640000
+2
+passNum:	25080532
+totalNum:	25080543
+total_time: 515.390000
+3
+passNum:	25080532
+totalNum:	25080543
+total_time: 515.330000
+4
+passNum:	25080532
+totalNum:	25080543
+total_time: 515.300000
+5
+passNum:	25080532
+totalNum:	25080543
+total_time: 515.590000
+NW 2 across 1..5
+1
+passNum:	25080543
+totalNum:	25080543
+total_time: 321.710000
+2
+passNum:	25080543
+totalNum:	25080543
+total_time: 322.510000
+3
+passNum:	25080543
+totalNum:	25080543
+total_time: 321.360000
+4
+passNum:	25080543
+totalNum:	25080543
+total_time: 322.380000
+5
+passNum:	25080543
+totalNum:	25080543
+total_time: 322.760000
+LV across 1..5
+1
+passNum:	120
+totalNum:	25080543
+total_time: 2.430000
+2
+passNum:	398
+totalNum:	25080543
+total_time: 3.520000
+3
+passNum:	2294
+totalNum:	25080543
+total_time: 5.140000
+4
+passNum:	20801
+totalNum:	25080543
+total_time: 7.210000
+5
+passNum:	48041
+totalNum:	25080543
+total_time: 9.740000
+BV LEAP
+1
+passNum:	140
+totalNum:	25080543
+total_time: 2.210000
+2
+passNum:	18309
+totalNum:	25080543
+total_time: 3.780000
+3
+passNum:	43417
+totalNum:	25080543
+total_time: 4.720000
+4
+passNum:	122329
+totalNum:	25080543
+total_time: 8.470000
+5
+passNum:	204574
+totalNum:	25080543
+total_time: 16.310000
+seqan
+1
+align_num: 12890
+total_num: 25080990
+total_time: 26.090000
+2
+align_num: 112142
+total_num: 25080979
+total_time: 26.160000
+3
+align_num: 204072
+total_num: 25080967
+total_time: 28.120000
+4
+align_num: 317362
+total_num: 25080956
+total_time: 28.690000
+5
+align_num: 461359
+total_num: 25080943
+total_time: 26.680000

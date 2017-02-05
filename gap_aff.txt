@@ -1,0 +1,85 @@
+
+NW 1 across 1..5
+1
+passNum:	25080532
+totalNum:	25080543
+total_time: 517.270000
+2
+passNum:	25080532
+totalNum:	25080543
+total_time: 516.820000
+3
+passNum:	25080532
+totalNum:	25080543
+total_time: 517.150000
+4
+passNum:	25080532
+totalNum:	25080543
+total_time: 517.250000
+5
+passNum:	25080532
+totalNum:	25080543
+total_time: 517.270000
+NW 2 across 1..5
+1
+passNum:	25080543
+totalNum:	25080543
+total_time: 323.660000
+2
+passNum:	25080543
+totalNum:	25080543
+total_time: 322.950000
+3
+passNum:	25080543
+totalNum:	25080543
+total_time: 323.010000
+4
+passNum:	25080543
+totalNum:	25080543
+total_time: 323.230000
+5
+passNum:	25080543
+totalNum:	25080543
+total_time: 322.820000
+BV LEAP
+1
+passNum:	140
+totalNum:	25080543
+total_time: 2.370000
+2
+passNum:	18309
+totalNum:	25080543
+total_time: 3.410000
+3
+passNum:	43417
+totalNum:	25080543
+total_time: 4.690000
+4
+passNum:	122329
+totalNum:	25080543
+total_time: 8.110000
+5
+passNum:	204574
+totalNum:	25080543
+total_time: 16.380000
+nonBV LEAP
+1
+passNum:	120
+totalNum:	25080543
+total_time: 2.380000
+2
+passNum:	398
+totalNum:	25080543
+total_time: 3.610000
+3
+passNum:	2294
+totalNum:	25080543
+total_time: 5.110000
+4
+passNum:	20801
+totalNum:	25080543
+total_time: 7.210000
+5
+passNum:	48041
+totalNum:	25080543
+total_time: 9.760000
