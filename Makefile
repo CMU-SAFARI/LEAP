@@ -15,7 +15,7 @@ SCORING_PATH := $(LIBS_PATH)/alignment_scoring
 
 #CFLAGS = -g --std=c++11 -mbmi -mavx2 -msse4.2 -I . -Ddebug \
 
-CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I . \
+CFLAGS = -O3 --std=c++11 -mbmi -mavx2 -msse4.2 -I . -DNO_BIT_VEC\
          -I $(UTILITY_LIB_PATH) \
          -I $(STRING_BUF_PATH) -I $(BIOINF_LIB_PATH) -I $(SCORING_PATH) \
          -I $(NW_PATH) -DCOMPILE_TIME='"$(shell date)"' -DSCORE_TYPE='int' \
