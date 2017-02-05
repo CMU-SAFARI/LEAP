@@ -987,7 +987,7 @@ int SwDriver::extendSeeds(
 				// Find offset of alignment's upstream base assuming net gaps=0
 				// between beginning of read and beginning of seed hit
 				int64_t refoff = (int64_t)toff - rdoff;
-                cout << "refoff: " << refoff << "\n"; 
+                //cout << "refoff: " << refoff << "\n"; 
 				// Coordinate of the seed hit w/r/t the pasted reference string
 				Coord refcoord(tidx, refoff, fw);
 				if(seenDiags1_.locusPresent(refcoord)) {
@@ -1103,7 +1103,8 @@ int SwDriver::extendSeeds(
 						readGaps, // max # of read gaps permitted in opp mate alignment
 						refGaps,  // max # of ref gaps permitted in opp mate alignment
 						(size_t)nceil, // # Ns permitted
-						maxhalf,  // max width in either direction
+                        0,  // JEREMIE: THIS IS TO GENERATE SAME LENGTH PAIRS 
+						//maxhalf,  // max width in either direction
 						rect);    // DP rectangle
 					assert(rect.repOk());
 					// Add the seed diagonal at least
@@ -1158,18 +1159,18 @@ int SwDriver::extendSeeds(
 					// Now fill the dynamic programming matrix and return true iff
 					// there is at least one valid alignment
 					TAlScore bestCell = std::numeric_limits<TAlScore>::min(); // TODO figure out what this line is ? ?? 
-                    cout << "Rd : "; 
+                    //cout << "Rd("<<rd.length()<<"): "; 
                     for (uint64_t i = 0; i < rd.length(); i++) { 
                         cout << nuc_decode(rd.getc(i, 1)); 
                     }
                     cout << "\n"; 
-                    cout << "Ref(" << rect.refl << "): ";
+                    //cout << "Ref(" << rect.refr + 1 - rect.refl << "): ";
                     for (uint64_t i = 0; i < rect.refr + 1 - rect.refl; i++) { 
                         cout << nuc_decode(ref.getBase(tidx, rect.refl + i));
                     }
                     cout << "\n"; 
 					found = swa.align(bestCell);
-                    cout << "Found: " << found << "\n"; 
+                    //cout << "Found: " << found << "\n"; 
 					swmSeed.tallyGappedDp(readGaps, refGaps);
 					prm.nExDps++;
 					if(!found) {
@@ -1264,7 +1265,7 @@ int SwDriver::extendSeeds(
 						assert(res->repOk());
 						// Check that alignment accurately reflects the
 						// reference characters aligned to
-                        cout << "pass?\n"; 
+                        //cout << "pass?\n"; 
 						assert(res->alres.matchesRef(
 							rd,
 							ref,
