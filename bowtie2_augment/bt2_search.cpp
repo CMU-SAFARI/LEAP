@@ -4282,11 +4282,11 @@ static void multiseedSearch(
 	delete _t;
 	if(!refs->loaded()) throw 1;
 	multiseed_refs = refs.get();
-    cout << "Printing out Refs\n";
-    cout << "Num Refs: " << refs->numRefs() << "\n"; 
-    for (uint64_t i = 0 ; i < refs->numRefs(); i++) { 
-        cout << "   i(" << i << "): " << refs->approxLen(i) << "\n";    
-    }
+    //cout << "Printing out Refs\n";
+    //cout << "Num Refs: " << refs->numRefs() << "\n"; 
+    //for (uint64_t i = 0 ; i < refs->numRefs(); i++) { 
+    //    cout << "   i(" << i << "): " << refs->approxLen(i) << "\n";    
+    //}
 #ifdef WITH_TBB
 	tbb::task_group tbb_grp;
 #else

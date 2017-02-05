@@ -1052,7 +1052,7 @@ int SwDriver::extendSeeds(
 					seenDiags1_.add(refival);
 				} else if(doUngapped && ungapped) {
 					resUngap_.reset();
-                    cout << "ungappedAlign\n"; 
+                    //cout << "ungappedAlign\n"; 
 					int al = swa.ungappedAlign(
 						fw ? rd.patFw : rd.patRc,
 						fw ? rd.qual  : rd.qualRev,

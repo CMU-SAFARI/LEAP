@@ -52,11 +52,19 @@ int main(int argc, char* argv[]) {
 	}
 /*
 */
+    if (argc < 2) {
+        printf("Usage: $>bin error [use SHD, use_levenshtein] \n"); 
+        exit(1);
+    }
+    int use_SHD = -1; // use default as default. 
+    if (argc > 2) {
+        use_SHD = atoi(argv[2]); 
+    }
+    int use_levenshtein = 1; // use levenshtein as default. 
+    if (argc > 3) { 
+        use_levenshtein = atoi(argv[3]); 
+    }
 
-	if (argc != 2) {
-		printf("Usage: $>bin error\n");
-		exit(1);
-	}
 
 	int error = atoi(argv[1]);
 
@@ -80,9 +88,17 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
+    if (use_levenshtein) { 
+        bool tmp = (use_SHD == -1? true : use_SHD); 
+        ed_obj.init_levenshtein(error, ED_GLOBAL, tmp);
+    }
+    else {
+        bool tmp = (use_SHD == -1? false : use_SHD); 
+        ed_obj.init_affine(error, error * 3, ED_GLOBAL, 2, 3, 1, tmp);
+    }
 
 	//ed_obj.init_levenshtein(error, ED_LOCAL, false);
-    ed_obj.init_affine(error, error * 3, ED_GLOBAL, 2, 3, 1, true);
+    //ed_obj.init_affine(error, error * 3, ED_GLOBAL, 2, 3, 1, true);
 
 	do {
 		//clear past result
