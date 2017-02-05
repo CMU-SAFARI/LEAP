@@ -178,11 +178,11 @@ void SwAligner::initRef(
 	// overhang off the boundaries of the reference sequence
 	const size_t rflen = (size_t)(rff - rfi);
 	// Figure the number of Ns we're going to add to either side
-	size_t leftNs  =
-		(rfi >= 0               ? 0 : (size_t)std::abs(static_cast<long>(rfi)));
+	size_t leftNs  = 0; 
+//		(rfi >= 0               ? 0 : (size_t)std::abs(static_cast<long>(rfi)));
 	leftNs = min(leftNs, rflen);
-	size_t rightNs =
-		(rff <= (TRefOff)reflen ? 0 : (size_t)std::abs(static_cast<long>(rff - reflen)));
+	size_t rightNs = 0; 
+//		(rff <= (TRefOff)reflen ? 0 : (size_t)std::abs(static_cast<long>(rff - reflen)));
 	rightNs = min(rightNs, rflen);
 	// rflenInner = length of just the portion that doesn't overhang ref ends
 	assert_geq(rflen, leftNs + rightNs);
@@ -498,7 +498,7 @@ int SwAligner::ungappedAlign(
 bool SwAligner::align(
 	TAlScore& best)    // best alignment score observed in DP matrix
 {
-    cout << "align!\n"; 
+    //cout << "align!\n"; 
 	assert(initedRef() && initedRead());
 	assert_eq(STATE_INITED, state_);
 	state_ = STATE_ALIGNED;
