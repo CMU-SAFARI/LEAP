@@ -22,8 +22,14 @@ int SIMD_ED::count_ID_length_avx(int lane_idx, int start_pos) {
 
 #ifdef NO_BIT_VEC
 		int id_length = 0;
-		while (id_length < id_length == 8 * sizeof(uint64_t) && byte_cast[i] & (1 << id_length) == 0)
+		while ((id_length < 8 * sizeof(uint64_t) ) && ((byte_cast[i] & ((uint64_t)1 << id_length)) == 0) )
 			id_length++;
+/*
+		cout << "id_length: " << id_length << endl;
+		cout << "byte_cast[i]: " << byte_cast[i] << endl;
+		int temp = byte_cast[i] & ((uint64_t)1 << id_length);
+		cout << "temp: " << temp << endl;
+*/
 #else
 		int id_length = _tzcnt_u64(byte_cast[i]);
 #endif
