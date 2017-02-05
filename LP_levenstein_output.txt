@@ -1,0 +1,148 @@
+LP_levenstein
+NW 1 across 1..5
+1
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.540000
+2
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.570000
+3
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.510000
+4
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.610000
+5
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.490000
+NW 2 across 1..5
+1
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.070000
+2
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.040000
+3
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.040000
+4
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.060000
+5
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.100000
+LV across 1..5
+1
+passNum:	1200
+totalNum:	2045740
+total_time: 0.180000
+2
+passNum:	3980
+totalNum:	2045740
+total_time: 0.320000
+3
+passNum:	22940
+totalNum:	2045740
+total_time: 0.480000
+4
+passNum:	208010
+totalNum:	2045740
+total_time: 0.650000
+5
+passNum:	480410
+totalNum:	2045740
+total_time: 0.860000
+BV LEAP
+1
+passNum:	930
+totalNum:	2045740
+total_time: 0.190000
+2
+passNum:	420170
+totalNum:	2045740
+total_time: 0.390000
+3
+passNum:	128550
+totalNum:	2045740
+total_time: 0.570000
+4
+passNum:	79380
+totalNum:	2045740
+total_time: 0.930000
+5
+passNum:	120780
+totalNum:	2045740
+total_time: 1.250000
+seqan
+1
+align_num: 5570
+total_num: 2045780
+total_time: 1.830000
+2
+align_num: 214060
+total_num: 2045750
+total_time: 1.920000
+3
+align_num: 563650
+total_num: 2045740
+total_time: 1.840000
+4
+align_num: 1071140
+total_num: 2045740
+total_time: 1.810000
+5
+align_num: 1765530
+total_num: 2045740
+total_time: 1.740000
+BV LEAP SHD ON
+1
+passNum:	943777
+totalNum:	2045740
+total_time: 0.180000
+2
+passNum:	812360
+totalNum:	2045740
+total_time: 0.310000
+3
+passNum:	216230
+totalNum:	2045740
+total_time: 0.480000
+4
+passNum:	79770
+totalNum:	2045740
+total_time: 0.690000
+5
+passNum:	120780
+totalNum:	2045740
+total_time: 0.920000
+LEAP NO BV
+1
+passNum:	1200
+totalNum:	2045740
+total_time: 0.170000
+2
+passNum:	3980
+totalNum:	2045740
+total_time: 0.310000
+3
+passNum:	22940
+totalNum:	2045740
+total_time: 0.470000
+4
+passNum:	208010
+totalNum:	2045740
+total_time: 0.670000
+5
+passNum:	480410
+totalNum:	2045740
+total_time: 0.860000

@@ -1,0 +1,84 @@
+BV LEAP SHD OFF
+1
+passNum:	470
+totalNum:	2045740
+total_time: 0.230000
+2
+passNum:	1460
+totalNum:	2045740
+total_time: 0.650000
+3
+passNum:	4340
+totalNum:	2045740
+total_time: 1.320000
+4
+passNum:	212020
+totalNum:	2045740
+total_time: 2.220000
+5
+passNum:	485970
+totalNum:	2045740
+total_time: 3.230000
+NW 1 BAG
+1
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.600000
+2
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.580000
+3
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.540000
+4
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.490000
+5
+passNum:	2045740
+totalNum:	2045740
+total_time: 6.520000
+NW 2 BAG
+1
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.040000
+2
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.120000
+3
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.160000
+4
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.130000
+5
+passNum:	2045740
+totalNum:	2045740
+total_time: 8.040000
+BV LEAP SHD ON
+1
+passNum:	470
+totalNum:	2045740
+total_time: 0.800000
+2
+passNum:	1460
+totalNum:	2045740
+total_time: 1.180000
+3
+passNum:	4340
+totalNum:	2045740
+total_time: 1.840000
+4
+passNum:	212020
+totalNum:	2045740
+total_time: 2.740000
+5
+passNum:	485970
+totalNum:	2045740
+total_time: 3.760000
