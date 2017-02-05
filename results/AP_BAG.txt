@@ -1,0 +1,53 @@
+ALL PAIRS BAG
+BV LEAP
+1
+passNum:	314
+totalNum:	25101371
+total_time: 2.970000
+2
+passNum:	187822
+totalNum:	25101371
+total_time: 7.800000
+3
+passNum:	298502
+totalNum:	25101371
+total_time: 16.040000
+4
+passNum:	597225
+totalNum:	25101371
+total_time: 27.390000
+5
+passNum:	791723
+totalNum:	25101371
+total_time: 42.470000
+NW 1 across 1
+1
+passNum:	531679
+totalNum:	25101371
+total_time: 28.250000
+NW 2 across 1
+1
+passNum:	25101371
+totalNum:	25101371
+total_time: 97.270000
+BV LEAP SHD ON
+1
+passNum:	314
+totalNum:	25101371
+total_time: 9.590000
+2
+passNum:	187822
+totalNum:	25101371
+total_time: 14.330000
+3
+passNum:	298502
+totalNum:	25101371
+total_time: 23.220000
+4
+passNum:	597225
+totalNum:	25101371
+total_time: 34.010000
+5
+passNum:	791723
+totalNum:	25101371
+total_time: 49.250000

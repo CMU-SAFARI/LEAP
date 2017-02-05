@@ -167,6 +167,9 @@ int main(int argc, char* argv[]) {
                     //cout << "read_idx" << read_idx << endl;
                     //ed_obj.backtrack();
                     //fprintf(stderr, "%.*s\n", 128, ed_obj.get_CIGAR().c_str() );
+
+                    //fprintf(stdout, "%.*s\n", 128, read_strs[read_idx].c_str() );
+                    //fprintf(stdout, "%.*s\n", 128, ref_strs[read_idx].c_str() );
                     valid_buff[read_idx] = true;
                 }
                 else {
@@ -198,7 +201,7 @@ int main(int argc, char* argv[]) {
                 //parasail_result = parasail_nw_striped_sse41_128_16(seq1, (const int)read_strs[read_idx].length(), seq2, (const int)ref_strs[read_idx].length(), -3, -1, user_matrix);
                 parasail_result = parasail_nw_banded(seq1, (const int)read_strs[read_idx].length(), seq2, (const int)ref_strs[read_idx].length(), -3, -1, 0, user_matrix);
 
-                if (parasail_result->score >= -12) {
+                if (parasail_result->score >= (error * 2)) {
                     valid_buff[read_idx] = true;
                 }
                 //printf("%d ", parasail_result->score);
@@ -214,7 +217,7 @@ int main(int argc, char* argv[]) {
                 parasail_result = parasail_nw_striped_sse41_128_16(seq1, (const int)read_strs[read_idx].length(), seq2, (const int)ref_strs[read_idx].length(), -3, -1, user_matrix);
                 // parasail_result = parasail_nw_banded(seq1, (const int)read_strs[read_idx].length(), seq2, (const int)ref_strs[read_idx].length(), -3, -1, 0, user_matrix);
 
-                if (parasail_result->score >= -12) {
+                if (parasail_result->score >= -(error * 2)) {
                     valid_buff[read_idx] = true;
                 }
                 //printf("%d ", parasail_result->score);
