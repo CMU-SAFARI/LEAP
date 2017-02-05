@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	elp_time.tms_cutime = 0;
 
 	SIMD_ED ed_obj;
-	ed_obj.init_levenshtein(error, ED_LOCAL, false);
+	ed_obj.init_levenshtein(error, ED_GLOBAL, false);
 
 	do {
 		//clear past result

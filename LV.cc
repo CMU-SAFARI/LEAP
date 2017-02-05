@@ -1,7 +1,7 @@
 #include "LV.h"
 #include <cstdio>
 
-int LV::count_ID_length_sse(int lane_idx, int start_pos) {
+int __attribute__((optimize("O0"))) LV::count_ID_length_sse(int lane_idx, int start_pos) {
 	int A_idx_offset = 0;
 	int B_idx_offset = 0;
 
