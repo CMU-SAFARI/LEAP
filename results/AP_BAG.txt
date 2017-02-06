@@ -51,3 +51,24 @@ total_time: 34.010000
 passNum:	791723
 totalNum:	25101371
 total_time: 49.250000
+testLV_BAG
+1
+passNum:	314
+totalNum:	25101371
+total_time: 4.330000
+2
+passNum:	187821
+totalNum:	25101371
+total_time: 10.070000
+3
+passNum:	298502
+totalNum:	25101371
+total_time: 19.510000
+4
+passNum:	597223
+totalNum:	25101371
+total_time: 33.420000
+5
+passNum:	791721
+totalNum:	25101371
+total_time: 52.070000

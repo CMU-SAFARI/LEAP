@@ -51,3 +51,24 @@ total_time: 23.660000
 passNum:	718289
 totalNum:	17532404
 total_time: 34.470000
+testLV_BAG
+1
+passNum:	314
+totalNum:	17532404
+total_time: 3.120000
+2
+passNum:	187724
+totalNum:	17532404
+total_time: 7.210000
+3
+passNum:	297233
+totalNum:	17532404
+total_time: 13.880000
+4
+passNum:	555777
+totalNum:	17532404
+total_time: 23.600000
+5
+passNum:	718287
+totalNum:	17532404
+total_time: 37.040000
