@@ -361,6 +361,9 @@ void SIMD_ED::init_levenshtein(int ED_threshold, ED_modes mode, bool SHD_enable)
 
 void SIMD_ED::reset_levenshtein() {
 	ED_pass = false;
+	final_lane_idx = mid_lane;
+	final_ED = ED_t + 1;
+	converge_ED = ED_t + 1;
 	for (int i = 1; i < total_lanes - 1; i++) {
 		if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END) {
 			int ED = abs(i - mid_lane);
@@ -385,6 +388,7 @@ void SIMD_ED::run_levenshtein() {
 	}
 
 	int length;
+	bool global_complete = false;
 
 	for (int l = 1; l < total_lanes - 1; l++) {
 		if (cur_ED[l] == 0) {
@@ -403,6 +407,7 @@ void SIMD_ED::run_levenshtein() {
 			if (end[l][0] == buffer_length) {
 				final_lane_idx = l;
 				final_ED = 0;
+				converge_ED = 0;
 				ED_pass = true;
 				return;
 			}
@@ -412,8 +417,25 @@ void SIMD_ED::run_levenshtein() {
 	}
 	
 	for (int e = 1; e <= ED_t; e++) {
-		for (int l = 1; l < total_lanes - 1; l++) {
+		int first_lane = 1;
+		int last_lane = total_lanes - 2;
+		if (mode == ED_GLOBAL) {
+			int lane_limit = min(e, converge_ED - e - 1);
+			if (lane_limit < 0)
+				break;
+			first_lane = mid_lane - lane_limit;
+			last_lane = mid_lane + lane_limit;
+		}
+
+		for (int l = first_lane; l <= last_lane; l++) {
 			if (cur_ED[l] == e) {
+				int lane_diff = abs(l - mid_lane);
+				if (mode == ED_GLOBAL && e + lane_diff >= converge_ED) {
+					start[l][e] = -2;
+					end[l][e] = -2;
+					cur_ED[l]++;
+					continue;
+				}
 				
 #ifdef debug	
 				cout << "e: " << e << " l: " << l << endl;
@@ -422,9 +444,9 @@ void SIMD_ED::run_levenshtein() {
 				int top_offset = 0;
 				int bot_offset = 0;
 
-				if (l >= mid_lane)
+				if (l > mid_lane)
 					top_offset = 1;
-				if (l <= mid_lane)
+				if (l < mid_lane)
 					bot_offset = 1;
 
 				// Find the largest starting position
@@ -451,22 +473,40 @@ void SIMD_ED::run_levenshtein() {
 #endif
 
 				if (end[l][e] == buffer_length) {
-					final_lane_idx = l;
-					final_ED = e;
-					ED_pass = true;
-					
-					break;
+					if (mode == ED_GLOBAL) {
+						int candidate_ED = e + lane_diff;
+						if (candidate_ED < converge_ED) {
+							final_lane_idx = l;
+							final_ED = e;
+							converge_ED = candidate_ED;
+						}
+						if (l == mid_lane) {
+							global_complete = true;
+							break;
+						}
+					}
+					else {
+						final_lane_idx = l;
+						final_ED = e;
+						ED_pass = true;
+						break;
+					}
 				}
 
 				cur_ED[l]++;
 			}
 		}
 
-		if (ED_pass)
+		if (global_complete || (mode != ED_GLOBAL && ED_pass))
+			break;
+		if (mode == ED_GLOBAL && e + 1 >= converge_ED)
 			break;
 	}
 
-	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
+	if (mode == ED_GLOBAL) {
+		ED_pass = converge_ED <= ED_t;
+	}
+	else if (ED_pass && mode == ED_SEMI_FREE_BEGIN) {
 		converge_ED = final_ED + abs(final_lane_idx - mid_lane);
 		ED_pass = converge_ED <= ED_t;
 	}
@@ -511,9 +551,9 @@ void SIMD_ED::backtrack_levenshtein() {
 		int top_offset = 0;
 		int bot_offset = 0;
 
-		if (lane_idx >= mid_lane)
+		if (lane_idx > mid_lane)
 			top_offset = 1;
-		if (lane_idx <= mid_lane)
+		if (lane_idx < mid_lane)
 			bot_offset = 1;
 
 		if (start[lane_idx][ED_probe] == (end[lane_idx][ED_probe - 1] + 1) ) {
