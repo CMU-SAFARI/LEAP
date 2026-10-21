@@ -19,11 +19,17 @@
 #include "string_buffer.h" 
 #include "needleman_wunsch.h" 
 #include "nw_cmdline.h" 
-#include "parasail.h" 
+#ifdef USE_PARASAIL
+#include "parasail.h"
+#endif
 
 #define BATCH_RUN 1000000 
 #ifndef _MAX_LENGTH_ 
+#ifdef USE_AVX512
+#define _MAX_LENGTH_ 512
+#else
 #define _MAX_LENGTH_ 256
+#endif
 #endif
 
 using namespace std;

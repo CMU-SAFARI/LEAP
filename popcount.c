@@ -207,6 +207,31 @@ uint32_t ssse3_popcount_m128_core(__m128i reg, uint8_t *map) {
 	*/
 }
 
+#ifdef USE_AVX512
+uint32_t ssse3_popcount_m512_core(__m512i reg, uint8_t *map) {
+	__m512i clear_mask = _mm512_set1_epi8(0x0f);
+	__m512i count_mask = _mm512_broadcast_i32x4(_mm_loadu_si128((__m128i*) map));
+
+	__m512i upper_bits = _mm512_srli_epi16(reg, 4);
+	upper_bits = _mm512_and_si512(upper_bits, clear_mask);
+	__m512i lower_bits = _mm512_and_si512(reg, clear_mask);
+
+	__m512i lower_sum = _mm512_shuffle_epi8(count_mask, lower_bits);
+	__m512i upper_sum = _mm512_shuffle_epi8(count_mask, upper_bits);
+
+	__m512i packed_sum_8 = _mm512_add_epi8(lower_sum, upper_sum);
+	__m512i packed_sum_64 = _mm512_sad_epu8(packed_sum_8, _mm512_setzero_si512());
+
+	uint64_t packed_sum[8] __aligned__;
+	_mm512_storeu_si512((__m512i*) packed_sum, packed_sum_64);
+
+	uint32_t result = 0;
+	for (int i = 0; i < 8; i++)
+		result += packed_sum[i];
+	return result;
+}
+#endif
+
 uint32_t popcount_m128i_sse(__m128i reg) {
 	return ssse3_popcount_m128_core(reg, POPCOUNT);
 }
@@ -215,6 +240,12 @@ uint32_t popcount_m256i_avx(__m256i reg) {
 	return ssse3_popcount_m256_core(reg, POPCOUNT);
 }
 
+#ifdef USE_AVX512
+uint32_t popcount_m512i_avx512(__m512i reg) {
+	return ssse3_popcount_m512_core(reg, POPCOUNT);
+}
+#endif
+
 uint32_t popcount_SHD_sse(__m128i reg) {
 	return ssse3_popcount_m128_core(reg, POPCOUNT_SHD);
 }
@@ -222,6 +253,12 @@ uint32_t popcount_SHD_sse(__m128i reg) {
 uint32_t popcount_SHD_avx(__m256i reg) {
 	return ssse3_popcount_m256_core(reg, POPCOUNT_SHD);
 }
+
+#ifdef USE_AVX512
+uint32_t popcount_SHD_avx512(__m512i reg) {
+	return ssse3_popcount_m512_core(reg, POPCOUNT_SHD);
+}
+#endif
 
 uint32_t builtin_popcount(uint8_t* buffer, int chunks16) {
 	uint32_t result = 0;
@@ -253,4 +290,3 @@ uint32_t popcount(uint8_t *buffer, int chunks16) {
 
 	return result;
 }
-

@@ -8,8 +8,13 @@
 #include "bit_convert.h"
 
 #ifndef _MAX_LENGTH_ 
+#ifdef USE_AVX512
+#define _MAX_LENGTH_ 512
+#else
 #define _MAX_LENGTH_ 256
 #endif
+#endif
+
 
 #ifndef _AFFINE_DEF_POS_ 
 #define _AFFINE_DEF_POS_ 10000000
@@ -33,7 +38,7 @@ struct ED_INFO {
 #define __SIMD_ED_H_
 
 enum ED_modes {ED_LOCAL, ED_GLOBAL, ED_SEMI_FREE_BEGIN, ED_SEMI_FREE_END};
-enum OP_modes {SSE, AVX};
+enum OP_modes {SSE, AVX, AVX512};
 
 class SIMD_ED {
 public:
@@ -42,16 +47,27 @@ public:
 
 	void init_levenshtein(int ED_threshold, ED_modes mode = ED_LOCAL, bool SHD_enable = true);
 	void init_affine(int gap_threshold, int AF_threshold, ED_modes mode, int ms_penalty, int gap_open_penalty, int gap_ext_penalty, bool SHD_enable = false, int SHD_threshold = 10);
+#ifdef USE_AVX512
+	int count_ID_length_avx512(int lane_idx, int start_pos);
+#else
 	int count_ID_length_avx(int lane_idx, int start_pos);
+#endif
 
 	void convert_reads(char *read, char *ref, int length, uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1);
 
 	void load_reads(char *read, char *ref, int length);
 	void load_reads(uint8_t *A0, uint8_t *A1, uint8_t *B0, uint8_t *B1, int length);
 	void load_reads(__m256i A0, __m256i A1, __m256i B0, __m256i B1, int length);
+#ifdef USE_AVX512
+	void load_reads(__m512i A0, __m512i A1, __m512i B0, __m512i B1, int length);
+#endif
 	
 	void load_ref(__m256i B0, __m256i B1);
 	void load_read(__m256i A0, __m256i A1, int length);
+#ifdef USE_AVX512
+	void load_ref(__m512i B0, __m512i B1);
+	void load_read(__m512i A0, __m512i A1, int length);
+#endif
 	
 	void calculate_masks();
 
@@ -72,7 +88,11 @@ private:
 
     // variables
 	int ED_t;
+#ifdef USE_AVX512
+	__m512i *hamming_masks;
+#else
 	__m256i *hamming_masks;
+#endif
 	ED_modes mode;
 	bool SHD_enable;
 	//__m128i shifted_mask;
@@ -121,4 +141,3 @@ private:
 };
 
 #endif
-

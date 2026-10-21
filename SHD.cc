@@ -156,6 +156,41 @@ void flip_false_zero(__m256i& vec) {
 //	print128_bit(vec);
 }
 
+#ifdef USE_AVX512
+void flip_false_zero(__m512i& vec) {
+	__m512i boundary = _mm512_set1_epi8(0x7f);
+	__m512i shift = _mm512_and_si512(boundary, vec);
+	__m512i mask = _mm512_broadcast_i32x4(_mm_loadu_si128((__m128i*) MASK_SRS));
+
+	shift = _mm512_shuffle_epi8(mask, shift);
+	vec = _mm512_or_si512(vec, shift);
+
+	for (int i = 1; i < 4; i++) {
+		shift = _mm512_srli_epi16(vec, i);
+		shift = _mm512_and_si512(boundary, shift);
+		shift = _mm512_shuffle_epi8(mask, shift);
+		shift = _mm512_slli_epi16(shift, i);
+		vec = _mm512_or_si512(vec, shift);
+	}
+
+	__m512i shifted_vec = shift_right_avx512(vec, 4);
+	shift = _mm512_and_si512(boundary, shifted_vec);
+	shift = _mm512_shuffle_epi8(mask, shift);
+	shifted_vec = _mm512_or_si512(shifted_vec, shift);
+
+	for (int i = 1; i < 4; i++) {
+		shift = _mm512_srli_epi16(shifted_vec, i);
+		shift = _mm512_and_si512(boundary, shift);
+		shift = _mm512_shuffle_epi8(mask, shift);
+		shift = _mm512_slli_epi16(shift, i);
+		shifted_vec = _mm512_or_si512(shifted_vec, shift);
+	}
+
+	shifted_vec = shift_left_avx512(shifted_vec, 4);
+	vec = _mm512_or_si512(shifted_vec, vec);
+}
+#endif
+
 int bit_vec_filter_sse(__m128i read_XMM0, __m128i read_XMM1,
 		__m128i ref_XMM0, __m128i ref_XMM1, int length, int max_error) {
 	
@@ -385,3 +420,81 @@ int bit_vec_filter_avx(__m256i *xor_masks, int length, int max_error) {
 	else
 		return 1;
 }
+
+#ifdef USE_AVX512
+int bit_vec_filter_avx512(__m512i read_ZMM0, __m512i read_ZMM1,
+		__m512i ref_ZMM0, __m512i ref_ZMM1, int length, int max_error) {
+	__m512i mask;
+	if (length >= AVX512_BIT_LENGTH)
+		mask = _mm512_set1_epi8(0xff);
+	else
+		mask = _mm512_loadu_si512((__m512i*) (MASK_AVX512_END + (length *
+										AVX512_BYTE_LENGTH)));
+
+	read_ZMM0 = _mm512_and_si512(read_ZMM0, mask);
+	read_ZMM1 = _mm512_and_si512(read_ZMM1, mask);
+	ref_ZMM0 = _mm512_and_si512(ref_ZMM0, mask);
+	ref_ZMM1 = _mm512_and_si512(ref_ZMM1, mask);
+
+	__m512i diff_ZMM = _mm512_xor_si512(read_ZMM0, ref_ZMM0);
+	__m512i temp_diff_ZMM = _mm512_xor_si512(read_ZMM1, ref_ZMM1);
+	diff_ZMM = _mm512_or_si512(diff_ZMM, temp_diff_ZMM);
+
+	flip_false_zero(diff_ZMM);
+
+	for (int j = 1; j <= max_error; j++) {
+		__m512i temp_mask = _mm512_loadu_si512((__m512i*) (MASK_AVX512_BEG + (j - 1) *
+								AVX512_BYTE_LENGTH));
+		temp_mask = _mm512_and_si512(temp_mask, mask);
+
+		__m512i shift_ZMM = shift_right_avx512(read_ZMM0, j);
+		temp_diff_ZMM = _mm512_xor_si512(shift_ZMM, ref_ZMM0);
+		shift_ZMM = shift_right_avx512(read_ZMM1, j);
+		__m512i temp_shift_ZMM = _mm512_xor_si512(shift_ZMM, ref_ZMM1);
+		temp_diff_ZMM = _mm512_or_si512(temp_shift_ZMM, temp_diff_ZMM);
+		temp_diff_ZMM = _mm512_and_si512(temp_diff_ZMM, temp_mask);
+		flip_false_zero(temp_diff_ZMM);
+		diff_ZMM = _mm512_and_si512(diff_ZMM, temp_diff_ZMM);
+
+		shift_ZMM = shift_right_avx512(ref_ZMM0, j);
+		temp_diff_ZMM = _mm512_xor_si512(shift_ZMM, read_ZMM0);
+		shift_ZMM = shift_right_avx512(ref_ZMM1, j);
+		temp_shift_ZMM = _mm512_xor_si512(shift_ZMM, read_ZMM1);
+		temp_diff_ZMM = _mm512_or_si512(temp_shift_ZMM, temp_diff_ZMM);
+		temp_diff_ZMM = _mm512_and_si512(temp_diff_ZMM, temp_mask);
+		flip_false_zero(temp_diff_ZMM);
+		diff_ZMM = _mm512_and_si512(diff_ZMM, temp_diff_ZMM);
+	}
+
+	int total_difference = popcount_SHD_avx512(diff_ZMM);
+	return total_difference <= max_error;
+}
+
+int bit_vec_filter_avx512(__m512i *xor_masks, int length, int max_error) {
+	__m512i mask;
+	if (length >= AVX512_BIT_LENGTH)
+		mask = _mm512_set1_epi8(0xff);
+	else
+		mask = _mm512_loadu_si512((__m512i*) (MASK_AVX512_END + (length *
+										AVX512_BYTE_LENGTH)));
+
+	__m512i diff_ZMM = _mm512_set1_epi8(0xff);
+
+	for (int j = 0; j <= 2 * max_error; j++) {
+		int error = abs(j - max_error);
+		__m512i temp_mask;
+		if (error == 0)
+			temp_mask = mask;
+		else
+			temp_mask = _mm512_loadu_si512((__m512i*) (MASK_AVX512_BEG + (error - 1) *
+									AVX512_BYTE_LENGTH));
+		temp_mask = _mm512_and_si512(temp_mask, mask);
+		__m512i temp_diff = _mm512_and_si512(xor_masks[j], temp_mask);
+		flip_false_zero(temp_diff);
+		diff_ZMM = _mm512_and_si512(diff_ZMM, temp_diff);
+	}
+
+	int total_difference = popcount_SHD_avx512(diff_ZMM);
+	return total_difference <= max_error;
+}
+#endif

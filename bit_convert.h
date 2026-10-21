@@ -9,9 +9,10 @@
 #define BIT_CONVERT_H_
 
 #include <stdint.h>
+#include <x86intrin.h>
 
 #ifndef __aligned__
-	#define __aligned__ __attribute__((aligned(32)))
+	#define __aligned__ __attribute__((aligned(64)))
 #endif
 
 void c_convert2bit(char *str, int length, uint8_t *bits);
@@ -19,5 +20,9 @@ void c_convert2bit(char *str, int length, uint8_t *bits);
 void sse_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1);
 
 void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1);
+
+#ifdef USE_AVX512
+void avx512_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1);
+#endif
 
 #endif /* BIT_CONVERT_H_ */

@@ -1,4 +1,5 @@
 #include "mask.h"
+#include <string.h>
 
 uint8_t __MASK_SSE_BEG_ [MAX_ERROR_SSE * SSE_BYTE_LENGTH] __aligned__ = {
 	0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -427,8 +428,39 @@ uint8_t __MASK_SRS_[32] __aligned__ = {
 	0x08, 0x0f, 0x0e, 0x0f, 0x0c, 0x0f, 0x0e, 0x0f
 	};
 
+uint8_t __MASK_AVX512_BEG_ [MAX_ERROR_AVX512 * AVX512_BYTE_LENGTH] __aligned__;
+uint8_t __MASK_AVX512_END_ [AVX512_BIT_LENGTH * AVX512_BYTE_LENGTH] __aligned__;
+
+static void init_linear_masks(uint8_t *beg, int max_error, uint8_t *end,
+		int bit_length, int byte_length) {
+	for (int e = 0; e < max_error; e++) {
+		memset(beg + e * byte_length, 0xff, byte_length);
+		int clear_bits = e + 1;
+		for (int b = 0; b < byte_length && clear_bits > 0; b++) {
+			int n = clear_bits > 8 ? 8 : clear_bits;
+			beg[e * byte_length + b] = (uint8_t)(0xff << n);
+			clear_bits -= n;
+		}
+	}
+
+	for (int length = 0; length < bit_length; length++) {
+		uint8_t *row = end + length * byte_length;
+		memset(row, 0, byte_length);
+		for (int bit = 0; bit < length; bit++)
+			row[bit / 8] |= (uint8_t)(1u << (bit % 8));
+	}
+}
+
+__attribute__((constructor))
+static void init_avx512_masks(void) {
+	init_linear_masks(__MASK_AVX512_BEG_, MAX_ERROR_AVX512,
+			__MASK_AVX512_END_, AVX512_BIT_LENGTH, AVX512_BYTE_LENGTH);
+}
+
 uint8_t* MASK_SSE_END = __MASK_SSE_END_;
 uint8_t* MASK_SSE_BEG = __MASK_SSE_BEG_;
 uint8_t* MASK_AVX_END = __MASK_AVX_END_;
 uint8_t* MASK_AVX_BEG = __MASK_AVX_BEG_;
+uint8_t* MASK_AVX512_END = __MASK_AVX512_END_;
+uint8_t* MASK_AVX512_BEG = __MASK_AVX512_BEG_;
 uint8_t* MASK_SRS = __MASK_SRS_;

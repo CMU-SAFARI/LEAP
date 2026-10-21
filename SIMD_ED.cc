@@ -3,6 +3,8 @@
 #include "SHD.h"
 #include <cassert>
 
+
+#ifndef USE_AVX512
 int SIMD_ED::count_ID_length_avx(int lane_idx, int start_pos) {
 	__m256i shifted_mask = shift_left_avx(hamming_masks[lane_idx], start_pos);
 	
@@ -55,6 +57,49 @@ int SIMD_ED::count_ID_length_avx(int lane_idx, int start_pos) {
 	else
 		return buffer_length - start_pos;
 }
+#endif
+
+#ifdef USE_AVX512
+int SIMD_ED::count_ID_length_avx512(int lane_idx, int start_pos) {
+    __m512i shifted_mask = shift_left_avx512(hamming_masks[lane_idx], start_pos);
+#ifdef debug
+    cout << "start_pos: " << start_pos << " ";
+    print512_bit(shifted_mask);
+#endif
+
+    uint64_t byte_cast[_MAX_LENGTH_ / 64] __aligned__;
+    _mm512_storeu_si512((__m512i*) byte_cast, shifted_mask);
+
+    int length_result = 0;
+    for (int i = 0; i <= (buffer_length - start_pos - 1) / (8 * sizeof(uint64_t)); i++) {
+#ifdef NO_BIT_VEC
+        int id_length = 0;
+        while ((id_length < 8 * sizeof(uint64_t)) &&
+               ((byte_cast[i] & ((uint64_t)1 << id_length)) == 0))
+            id_length++;
+#else
+        int id_length = _tzcnt_u64(byte_cast[i]);
+#endif
+
+        if (id_length == 8 * sizeof(uint64_t) && byte_cast[i] == 0) {
+            id_length = 8 * sizeof(uint64_t);
+            length_result += id_length;
+        } else {
+            length_result += id_length;
+            break;
+        }
+    }
+
+#ifdef debug
+    cout << "length result: " << length_result << endl;
+#endif
+
+    if (length_result < buffer_length - start_pos)
+        return length_result;
+    else
+        return buffer_length - start_pos;
+}
+#endif
 
 SIMD_ED::SIMD_ED() {
 	ED_t = 0;
@@ -133,14 +178,21 @@ void SIMD_ED::convert_reads(char *read, char *ref, int length, uint8_t *A0, uint
 
 void SIMD_ED::load_reads(char *read, char *ref, int length) {
 	buffer_length = length;
-	
 	if (length > _MAX_LENGTH_)
 		length = _MAX_LENGTH_;
 
 	strncpy(A, read, length);
+#ifdef USE_AVX512
+	avx512_convert2bit(A, A_bit0_t, A_bit1_t);
+#else
 	avx_convert2bit(A, A_bit0_t, A_bit1_t);
+#endif
 	strncpy(B, ref, length);
+#ifdef USE_AVX512
+	avx512_convert2bit(B, B_bit0_t, B_bit1_t);
+#else
 	avx_convert2bit(B, B_bit0_t, B_bit1_t);
+#endif
 
 	//cout << "A: " << A  << endl;
 	//cout << "B: " << B  << endl;
@@ -162,6 +214,16 @@ void SIMD_ED::load_reads(__m256i A0, __m256i A1, __m256i B0, __m256i B1, int len
 	_mm256_store_si256((__m256i*) B_bit1_t, B1);
 }
 
+#ifdef USE_AVX512
+void SIMD_ED::load_reads(__m512i A0, __m512i A1, __m512i B0, __m512i B1, int length) {
+	buffer_length = length;
+	_mm512_storeu_si512((__m512i*) A_bit0_t, A0);
+	_mm512_storeu_si512((__m512i*) A_bit1_t, A1);
+	_mm512_storeu_si512((__m512i*) B_bit0_t, B0);
+	_mm512_storeu_si512((__m512i*) B_bit1_t, B1);
+}
+#endif
+
 void SIMD_ED::load_read(__m256i A0, __m256i A1, int length) {
 	buffer_length = length;
 	_mm256_store_si256((__m256i*) A_bit0_t, A0);
@@ -173,33 +235,77 @@ void SIMD_ED::load_ref(__m256i B0, __m256i B1) {
 	_mm256_store_si256((__m256i*) B_bit1_t, B1);
 }
 
+#ifdef USE_AVX512
+void SIMD_ED::load_read(__m512i A0, __m512i A1, int length) {
+	buffer_length = length;
+	_mm512_storeu_si512((__m512i*) A_bit0_t, A0);
+	_mm512_storeu_si512((__m512i*) A_bit1_t, A1);
+}
+
+void SIMD_ED::load_ref(__m512i B0, __m512i B1) {
+	_mm512_storeu_si512((__m512i*) B_bit0_t, B0);
+	_mm512_storeu_si512((__m512i*) B_bit1_t, B1);
+}
+#endif
+
 void SIMD_ED::calculate_masks() {
+#ifdef USE_AVX512
+	__m512i *A0 = (__m512i*) A_bit0_t;
+	__m512i *A1 = (__m512i*) A_bit1_t;
+	__m512i *B0 = (__m512i*) B_bit0_t;
+	__m512i *B1 = (__m512i*) B_bit1_t;
+#else
 	__m256i *A0 = (__m256i*) A_bit0_t;
 	__m256i *A1 = (__m256i*) A_bit1_t;
 	__m256i *B0 = (__m256i*) B_bit0_t;
 	__m256i *B1 = (__m256i*) B_bit1_t;
+#endif
 
 	for (int i = 1; i < total_lanes - 1; i++) {
+#ifdef USE_AVX512
+		__m512i shifted_A0 = *A0;
+		__m512i shifted_A1 = *A1;
+		__m512i shifted_B0 = *B0;
+		__m512i shifted_B1 = *B1;
+#else
 		__m256i shifted_A0 = *A0;
 		__m256i shifted_A1 = *A1;
 		__m256i shifted_B0 = *B0;
 		__m256i shifted_B1 = *B1;
+#endif
 
 		int shift_amount = abs(i - mid_lane);
 
 		if (i < mid_lane) {
+#ifdef USE_AVX512
+			shifted_B0 = shift_right_avx512(shifted_B0, shift_amount);
+			shifted_B1 = shift_right_avx512(shifted_B1, shift_amount);
+#else
 			shifted_B0 = shift_right_avx(shifted_B0, shift_amount);
 			shifted_B1 = shift_right_avx(shifted_B1, shift_amount);
+#endif
 		}
 		else if (i > mid_lane) {
+#ifdef USE_AVX512
+			shifted_A0 = shift_right_avx512(shifted_A0, shift_amount);
+			shifted_A1 = shift_right_avx512(shifted_A1, shift_amount);
+#else
 			shifted_A0 = shift_right_avx(shifted_A0, shift_amount);
 			shifted_A1 = shift_right_avx(shifted_A1, shift_amount);
+#endif
 		}
 
+#ifdef USE_AVX512
+		__m512i mask_bit0 = _mm512_xor_si512(shifted_A0, shifted_B0);
+		__m512i mask_bit1 = _mm512_xor_si512(shifted_A1, shifted_B1);
+
+		hamming_masks[i] = _mm512_or_si512(mask_bit0, mask_bit1);
+#else
 		__m256i mask_bit0 = _mm256_xor_si256(shifted_A0, shifted_B0);
 		__m256i mask_bit1 = _mm256_xor_si256(shifted_A1, shifted_B1);
 
 		hamming_masks[i] = _mm256_or_si256(mask_bit0, mask_bit1);
+#endif
 
 		//cout << "hamming_masks[" << i << "]: ";
 		//print128_bit(hamming_masks[i]);
@@ -220,7 +326,11 @@ void SIMD_ED::init_levenshtein(int ED_threshold, ED_modes mode, bool SHD_enable)
 	total_lanes = 2 * ED_t + 3;
 	mid_lane = ED_t + 1;
 
+#ifdef USE_AVX512
+	hamming_masks = new __m512i [total_lanes];
+#else
 	hamming_masks = new __m256i [total_lanes];
+#endif
 
 	cur_ED = new int[total_lanes];
 	ED_info = new ED_INFO[ED_t + 1];
@@ -251,6 +361,9 @@ void SIMD_ED::init_levenshtein(int ED_threshold, ED_modes mode, bool SHD_enable)
 
 void SIMD_ED::reset_levenshtein() {
 	ED_pass = false;
+	final_lane_idx = mid_lane;
+	final_ED = ED_t + 1;
+	converge_ED = ED_t + 1;
 	for (int i = 1; i < total_lanes - 1; i++) {
 		if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_END) {
 			int ED = abs(i - mid_lane);
@@ -263,16 +376,27 @@ void SIMD_ED::reset_levenshtein() {
 }
 
 void SIMD_ED::run_levenshtein() {
-	if (SHD_enable && !bit_vec_filter_avx(hamming_masks+1, buffer_length, ED_t) ) {
+	if (SHD_enable &&
+#ifdef USE_AVX512
+			!bit_vec_filter_avx512(hamming_masks+1, buffer_length, ED_t)
+#else
+			!bit_vec_filter_avx(hamming_masks+1, buffer_length, ED_t)
+#endif
+			) {
 		ED_pass = false;
 		return;
 	}
 
 	int length;
+	bool global_complete = false;
 
 	for (int l = 1; l < total_lanes - 1; l++) {
 		if (cur_ED[l] == 0) {
+#ifdef USE_AVX512
+			length = count_ID_length_avx512(l, start[l][0]);
+#else
 			length = count_ID_length_avx(l, start[l][0]);
+#endif
 	
 #ifdef debug
 			cout << "length result: " << length << " buffer_length: " << buffer_length << endl;
@@ -283,6 +407,7 @@ void SIMD_ED::run_levenshtein() {
 			if (end[l][0] == buffer_length) {
 				final_lane_idx = l;
 				final_ED = 0;
+				converge_ED = 0;
 				ED_pass = true;
 				return;
 			}
@@ -292,8 +417,25 @@ void SIMD_ED::run_levenshtein() {
 	}
 	
 	for (int e = 1; e <= ED_t; e++) {
-		for (int l = 1; l < total_lanes - 1; l++) {
+		int first_lane = 1;
+		int last_lane = total_lanes - 2;
+		if (mode == ED_GLOBAL) {
+			int lane_limit = min(e, converge_ED - e - 1);
+			if (lane_limit < 0)
+				break;
+			first_lane = mid_lane - lane_limit;
+			last_lane = mid_lane + lane_limit;
+		}
+
+		for (int l = first_lane; l <= last_lane; l++) {
 			if (cur_ED[l] == e) {
+				int lane_diff = abs(l - mid_lane);
+				if (mode == ED_GLOBAL && e + lane_diff >= converge_ED) {
+					start[l][e] = -2;
+					end[l][e] = -2;
+					cur_ED[l]++;
+					continue;
+				}
 				
 #ifdef debug	
 				cout << "e: " << e << " l: " << l << endl;
@@ -302,9 +444,9 @@ void SIMD_ED::run_levenshtein() {
 				int top_offset = 0;
 				int bot_offset = 0;
 
-				if (l >= mid_lane)
+				if (l > mid_lane)
 					top_offset = 1;
-				if (l <= mid_lane)
+				if (l < mid_lane)
 					bot_offset = 1;
 
 				// Find the largest starting position
@@ -317,7 +459,11 @@ void SIMD_ED::run_levenshtein() {
 				start[l][e] = max_start;
 
 				// Find the length of identical string
+#ifdef USE_AVX512
+				length = count_ID_length_avx512(l, start[l][e]);
+#else
 				length = count_ID_length_avx(l, start[l][e]);
+#endif
 
 				end[l][e] = max_start + length;
 
@@ -327,22 +473,40 @@ void SIMD_ED::run_levenshtein() {
 #endif
 
 				if (end[l][e] == buffer_length) {
-					final_lane_idx = l;
-					final_ED = e;
-					ED_pass = true;
-					
-					break;
+					if (mode == ED_GLOBAL) {
+						int candidate_ED = e + lane_diff;
+						if (candidate_ED < converge_ED) {
+							final_lane_idx = l;
+							final_ED = e;
+							converge_ED = candidate_ED;
+						}
+						if (l == mid_lane) {
+							global_complete = true;
+							break;
+						}
+					}
+					else {
+						final_lane_idx = l;
+						final_ED = e;
+						ED_pass = true;
+						break;
+					}
 				}
 
 				cur_ED[l]++;
 			}
 		}
 
-		if (ED_pass)
+		if (global_complete || (mode != ED_GLOBAL && ED_pass))
+			break;
+		if (mode == ED_GLOBAL && e + 1 >= converge_ED)
 			break;
 	}
 
-	if (mode == ED_GLOBAL || mode == ED_SEMI_FREE_BEGIN) {
+	if (mode == ED_GLOBAL) {
+		ED_pass = converge_ED <= ED_t;
+	}
+	else if (ED_pass && mode == ED_SEMI_FREE_BEGIN) {
 		converge_ED = final_ED + abs(final_lane_idx - mid_lane);
 		ED_pass = converge_ED <= ED_t;
 	}
@@ -387,9 +551,9 @@ void SIMD_ED::backtrack_levenshtein() {
 		int top_offset = 0;
 		int bot_offset = 0;
 
-		if (lane_idx >= mid_lane)
+		if (lane_idx > mid_lane)
 			top_offset = 1;
-		if (lane_idx <= mid_lane)
+		if (lane_idx < mid_lane)
 			bot_offset = 1;
 
 		if (start[lane_idx][ED_probe] == (end[lane_idx][ED_probe - 1] + 1) ) {
@@ -446,7 +610,11 @@ void SIMD_ED::init_affine(int gap_threshold, int af_threshold, ED_modes mode, in
  
  	total_lanes = 2 * gap_threshold + 3;
 	mid_lane = gap_threshold + 1;
+#ifdef USE_AVX512
+	hamming_masks = new __m512i [total_lanes];
+#else
 	hamming_masks = new __m256i [total_lanes];
+#endif
 	ED_info = new ED_INFO[af_threshold + 1];
 
 	start = new int* [total_lanes];
@@ -482,7 +650,13 @@ void SIMD_ED::reset_affine() {
 }
 
 void SIMD_ED::run_affine() {
-	if (SHD_enable && !bit_vec_filter_avx(hamming_masks+1, buffer_length, SHD_threshold) ) {
+	if (SHD_enable &&
+#ifdef USE_AVX512
+			!bit_vec_filter_avx512(hamming_masks+1, buffer_length, SHD_threshold)
+#else
+			!bit_vec_filter_avx(hamming_masks+1, buffer_length, SHD_threshold)
+#endif
+			) {
 		ED_pass = false;
 		return;
 	}
@@ -494,7 +668,11 @@ void SIMD_ED::run_affine() {
 	for (int l = 1; l < total_lanes - 1; l++) {
 		if (start[l][0] >= 0) {
 			int lane_diff = abs(l - mid_lane);
+#ifdef USE_AVX512
+			length = count_ID_length_avx512(l, lane_diff);
+#else
 			length = count_ID_length_avx(l, lane_diff);
+#endif
 	
 #ifdef debug
 			cout << "length result: " << length << " buffer_length: " << buffer_length << endl;
@@ -574,7 +752,11 @@ void SIMD_ED::run_affine() {
 #endif
 
 			if (start[l][e] >= 0) {
+#ifdef USE_AVX512
+				length = count_ID_length_avx512(l, start[l][e]);
+#else
 				length = count_ID_length_avx(l, start[l][e]);
+#endif
 				end[l][e] = start[l][e] + length;
 
 #ifdef debug	
@@ -774,4 +956,3 @@ string SIMD_ED::get_CIGAR() {
 
 	return CIGAR;
 }
-

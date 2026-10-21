@@ -5,10 +5,10 @@
  *      Author: hxin
  */
 
+#include <x86intrin.h>
 #include "print.h"
 #include "bit_convert.h"
 #include <stdio.h>
-#include <x86intrin.h>
 
 #ifndef __clang__
 // This is here only because gcc lacks some intrinsics!!
@@ -211,6 +211,37 @@ uint8_t LOC_MASK_AVX[256] = {
 		0x80, 0x80, 0x80, 0x80, //8
 		0x80, 0x80, 0x80, 0x80  //8
 		};
+
+#ifdef USE_AVX512
+uint8_t LOC_MASK_AVX512[512] __aligned__ = {
+		#define LOC_MASK_AVX512_64(v) \
+			v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, \
+			v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, \
+			v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, \
+			v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v
+		LOC_MASK_AVX512_64(0x01),
+		LOC_MASK_AVX512_64(0x02),
+		LOC_MASK_AVX512_64(0x10),
+		LOC_MASK_AVX512_64(0x20),
+		LOC_MASK_AVX512_64(0x04),
+		LOC_MASK_AVX512_64(0x08),
+		LOC_MASK_AVX512_64(0x40),
+		LOC_MASK_AVX512_64(0x80)
+		#undef LOC_MASK_AVX512_64
+		};
+
+static inline __m512i avx512_cmpeq_epi8_vector(__m512i a, __m512i b) {
+	__m512i x = _mm512_xor_si512(a, b);
+	__m512i zero = _mm512_setzero_si512();
+	__m512i high_bit = _mm512_set1_epi8((char)0x80);
+	__m512i one = _mm512_set1_epi8(0x01);
+
+	__m512i zero_high_bits = _mm512_and_si512(
+			_mm512_andnot_si512(x, _mm512_sub_epi8(x, one)), high_bit);
+	__m512i zero_ones = _mm512_and_si512(_mm512_srli_epi16(zero_high_bits, 7), one);
+	return _mm512_sub_epi8(zero, zero_ones);
+}
+#endif
 
 void sse_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 
@@ -479,3 +510,48 @@ void avx_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
 	}
 }
 
+#ifdef USE_AVX512
+void avx512_convert2bit(char *str, uint8_t *bits0, uint8_t *bits1) {
+	uint8_t transposed[512] __aligned__;
+	const int bit_order[8] = {0, 1, 4, 5, 2, 3, 6, 7};
+	__m512i maskC = _mm512_set1_epi8('C');
+	__m512i maskG = _mm512_set1_epi8('G');
+	__m512i maskT = _mm512_set1_epi8('T');
+	__m512i bit_ff = _mm512_set1_epi8((char)0xff);
+	__m512i bit0_acc = _mm512_setzero_si512();
+	__m512i bit1_acc = _mm512_setzero_si512();
+	__m512i result0, result1, temp, loc_mask;
+
+	// Equivalent 8-way transpose order produced by the original AVX2
+	// BASE_SHIFT1/BASE_SHIFT2 shuffle stages and LOC_MASK_AVX bit order.
+	for (int chunk = 0; chunk < 8; chunk++) {
+		for (int lane = 0; lane < 64; lane++) {
+			transposed[chunk * 64 + lane] = str[lane * 8 + bit_order[chunk]];
+		}
+	}
+
+	for (int i = 0; i < 512; i += 64) {
+		__m512i bases = _mm512_load_si512((__m512i const*) (transposed + i));
+		temp = avx512_cmpeq_epi8_vector(maskC, bases);
+		result0 = _mm512_and_si512(temp, bit_ff); //C=01
+
+		temp = avx512_cmpeq_epi8_vector(maskG, bases);
+		temp = _mm512_and_si512(temp, bit_ff); //G=10
+		result1 = _mm512_or_si512(_mm512_setzero_si512(), temp);
+
+		temp = avx512_cmpeq_epi8_vector(maskT, bases);
+		temp = _mm512_and_si512(temp, bit_ff); //T=11
+		result0 = _mm512_or_si512(result0, temp);
+		result1 = _mm512_or_si512(result1, temp);
+
+		loc_mask = _mm512_load_si512((__m512i const*) (LOC_MASK_AVX512 + i));
+		result0 = _mm512_and_si512(loc_mask, result0);
+		result1 = _mm512_and_si512(loc_mask, result1);
+		bit0_acc = _mm512_or_si512(bit0_acc, result0);
+		bit1_acc = _mm512_or_si512(bit1_acc, result1);
+	}
+
+	_mm512_storeu_si512((__m512i*) bits0, bit0_acc);
+	_mm512_storeu_si512((__m512i*) bits1, bit1_acc);
+}
+#endif

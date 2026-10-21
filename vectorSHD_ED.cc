@@ -19,7 +19,11 @@
 
 #define BATCH_RUN 1000000 
 #ifndef _MAX_LENGTH_ 
+#ifdef USE_AVX512
+#define _MAX_LENGTH_ 512
+#else
 #define _MAX_LENGTH_ 256
+#endif
 #endif
 
 using namespace std;
@@ -129,8 +133,8 @@ int main(int argc, char* argv[]) {
 			ref_strs[read_size].assign(tempstr);
 			valid_buff[read_size] = false;
 
-			if (length[read_size] > 256)
-				length[read_size] = 256;
+			if (length[read_size] > _MAX_LENGTH_)
+				length[read_size] = _MAX_LENGTH_;
 
 			//cout << "length: " << length[read_size] << endl;
 
